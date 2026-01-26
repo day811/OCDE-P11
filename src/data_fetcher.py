@@ -8,6 +8,7 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any
+from urllib.parse import urlencode
 import logging
 
 
@@ -20,7 +21,7 @@ class OpenAgendaFetcher:
     """Fetch events from Open Agenda API"""
     
     # Open Agenda API endpoint (free, no auth required)
-    BASE_URL = "https://www.openagenda.com/api/events"
+    BASE_URL = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/evenements-publics-openagenda/records/"
     
     # API parameters
     TIMEOUT = 10  # seconds
@@ -38,22 +39,8 @@ class OpenAgendaFetcher:
         self.days_back = days_back
         self.events = []
     
-    def _get_date_range(self) -> tuple:
-        """
-        Calculate date range for API query.
-        
-        Returns:
-            Tuple of (start_date, end_date) in YYYY-MM-DD format
-        """
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=self.days_back)
-        
-        return (
-            start_date.strftime("%Y-%m-%d"),
-            end_date.strftime("%Y-%m-%d")
-        )
     
-    def _build_api_params(self, page: int = 1, limit: int = 100) -> Dict[str, Any]:
+    def _build_api_url(self, page: int = 1, limit: int = 100) -> str:
         """
         Build API parameters for Open Agenda query.
         
@@ -64,18 +51,18 @@ class OpenAgendaFetcher:
         Returns:
             Dictionary of API parameters
         """
-        start_date, end_date = self._get_date_range()
+        start_date = (datetime.now() - timedelta(days=self.days_back)).isoformat()
+        loc_condition = f"location_region='{self.region}'" 
+        date_condition = f"lastdate_end>='{start_date}'"
         
         params = {
-            "search": self.region,           # Geographic search
             "limit": limit,                  # Items per page
             "offset": (page - 1) * limit,   # Pagination offset
-            "range": f"{start_date},{end_date}",  # Date range
-            "omitDescription": False,        # Include descriptions
-            "sort": "-updated_at",           # Sort by most recent updates
-        }
+            "where" : f"{loc_condition} AND {date_condition}"
+       }
         
-        return params
+        query_string = urlencode(params)
+        return f"{self.BASE_URL}?{query_string}"
     
     def fetch_page(self, page: int = 1, limit: int = 100) -> List[Dict[str, Any]]:
         """
@@ -88,21 +75,20 @@ class OpenAgendaFetcher:
         Returns:
             List of event dictionaries
         """
-        params = self._build_api_params(page=page, limit=limit)
+        url = self._build_api_url(page=page, limit=limit)
         
         for attempt in range(self.MAX_RETRIES):
             try:
                 logger.info(f"Fetching page {page} from Open Agenda API...")
                 
                 response = requests.get(
-                    self.BASE_URL,
-                    params=params,
+                    url,
                     timeout=self.TIMEOUT
                 )
                 response.raise_for_status()
                 
                 data = response.json()
-                events = data.get("data", [])
+                events = data.get("results", [])
                 
                 logger.info(f"✅ Page {page}: Got {len(events)} events")
                 return events
@@ -185,7 +171,7 @@ class OpenAgendaFetcher:
         
         for event in self.events:
             # Check required fields
-            required_fields = ["id", "title", "description", "dates"]
+            required_fields = ["uid", "title_fr", "description_fr", "firstdate_begin", "firstdate_end","lastdate_begin", "lastdate_end","location_city"]
             
             if all(field in event for field in required_fields):
                 valid_events.append(event)
@@ -251,6 +237,8 @@ def fetch_events_snapshot(
         Path to saved snapshot JSON
     """
     from config import SnapshotConfig
+
+    max_pages = SnapshotConfig.MAX_PAGES
     
     if snapshot_date is None:
         snapshot_date = datetime.now().strftime("%Y-%m-%d")
@@ -262,7 +250,7 @@ def fetch_events_snapshot(
     
     # Fetch events
     fetcher = OpenAgendaFetcher(region=region, days_back=days_back)
-    fetcher.fetch_all()
+    fetcher.fetch_all(max_pages =max_pages)
     fetcher.validate_events()
     
     # Save snapshot
