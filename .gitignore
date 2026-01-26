@@ -2,7 +2,7 @@
 sources/*
 *.parquet
 data/output/*
-data/tmp/*
+data/raw/*
 ~lock.*
 
 # Byte-compiled / optimized / DLL files
