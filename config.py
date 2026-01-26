@@ -50,6 +50,10 @@ class SnapshotConfig:
     
     # Historical period (days) for data collection
     DAYS_BACK = int(os.getenv("RAG_DAYS_BACK", "365"))
+
+    # Max pages limit to fetch
+    MAX_PAGES = os.getenv("MAX_PAGES", None)
+    if MAX_PAGES : MAX_PAGES=int(MAX_PAGES)
     
     # ============= METHODS =============
     
