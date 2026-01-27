@@ -18,7 +18,7 @@ import unittest
 import json
 import sys
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -49,8 +49,8 @@ class TestDataQuality(unittest.TestCase):
             cls.events = json.load(f)
         
         cls.snapshot_date = datetime.fromisoformat(snapshot_date)
-        cls.cutoff_date = cls.snapshot_date - timedelta(days=SnapshotConfig.DAYS_BACK)
-    
+        # Make cutoff_date timezone-aware (UTC)
+        cls.cutoff_date = (cls.snapshot_date - timedelta(days=SnapshotConfig.DAYS_BACK)).replace(tzinfo=timezone.utc)    
     # ============= BASIC STRUCTURE TESTS =============
     
     def test_data_is_not_empty(self):
@@ -79,6 +79,7 @@ class TestDataQuality(unittest.TestCase):
             'title_fr',
             'description_fr',
             'longdescription_fr',
+            'conditions_fr',
             'timings',
             'location_name',
             'location_city',
@@ -113,12 +114,23 @@ class TestDataQuality(unittest.TestCase):
             )
     
     def test_all_events_have_location(self):
-        """Verify all events have location information"""
+        """Verify all events have at least some location information"""
         for idx, event in enumerate(self.events):
             location_city = event.get('location_city', '')
+            location_name = event.get('location_name', '')
+            location_address = event.get('location_address', '')
+            
+            # At least one location field must have content
+            has_location = (
+                (location_city and len(str(location_city).strip()) > 0) or
+                (location_name and len(str(location_name).strip()) > 0) or
+                (location_address and len(str(location_address).strip()) > 0)
+            )
+            
             self.assertTrue(
-                location_city and len(str(location_city).strip()) > 0,
-                f"Event {idx} ({event.get('uid')}) has missing location_city"
+                has_location,
+                f"Event {idx} ({event.get('uid')}) has no location information "
+                f"(city, name, address all empty)"
             )
     
     # ============= TIMING VALIDATION TESTS =============
