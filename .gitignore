@@ -1,8 +1,7 @@
 # project customization
 sources/*
 *.parquet
-data/output/*
-data/raw/*
+data/*
 ~lock.*
 
 # Byte-compiled / optimized / DLL files
