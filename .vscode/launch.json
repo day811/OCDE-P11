@@ -10,7 +10,11 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/scripts/run_fetch_pipeline.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": [
+                "--max-pages",
+                "100"
+            ],
         }
     ]
 }
