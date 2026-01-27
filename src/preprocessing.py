@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class EventPreprocessor:
     """Clean and preprocess event data from snapshots"""
     
-    def __init__(self, snapshot_path: str):
+    def __init__(self, snapshot_path: str, days_back: int = 365):
         """
         Initialize preprocessor with snapshot data.
         
@@ -28,6 +28,11 @@ class EventPreprocessor:
             snapshot_path: Path to raw snapshot JSON
         """
         self.snapshot_path = snapshot_path
+        # Extract snapshot date from filename (raw_snapshot_YYYY-MM-DD.json)
+        snapshot_date_str = Path(snapshot_path).stem.replace("raw_snapshot_", "")
+        snapshot_date = datetime.fromisoformat(snapshot_date_str)
+        self.cutoff_date = (snapshot_date - timedelta(days=days_back)).isoformat()
+
         self.df = pd.DataFrame()
         self.metadata = None
         self.stats = {}
@@ -50,7 +55,7 @@ class EventPreprocessor:
         logger.info(f"Loaded {len(self.df)} events")
         self.stats['loaded'] = len(self.df)
     
-    def _extract_event_date(self, dates_field: list) -> Optional[datetime]:
+    def _extract_event_date(self, dates_field) -> list:
         """
         Extract primary event date from dates field.
         
@@ -60,54 +65,22 @@ class EventPreprocessor:
         Returns:
             Datetime object or None
         """
-        if not dates_field or not isinstance(dates_field, list):
-            return None
-        
+        if not dates_field or not isinstance(dates_field, str):
+            return []
+        filtered_dates= []
         try:
-            # Get first date from list
-            first_date = dates_field[0]
-            
-            if isinstance(first_date, dict):
-                # Format: {"start": "2026-01-25T19:00:00+02:00"}
-                date_str = first_date.get("start") or first_date.get("begin")
-            else:
-                date_str = first_date
-            
-            # Parse ISO format
-            if date_str:
-                return pd.to_datetime(date_str)
-        
+            # Convert "json" to json
+            dates_field = json.loads(dates_field)
+            for date_field in dates_field:
+                # Filter dates that not in correct range
+                if date_field['end'] >= self.cutoff_date:
+                    filtered_dates.append(date_field)    
+            return filtered_dates
+                
         except Exception as e:
             logger.debug(f"Error parsing date: {str(e)}")
         
-        return None
-    
-    def _extract_location(self, location_field: dict) -> str:
-        """
-        Extract readable location from Open Agenda location object.
-        
-        Args:
-            location_field: Location dictionary from API
-            
-        Returns:
-            Formatted location string
-        """
-        if not location_field:
-            return "Unknown"
-        
-        if isinstance(location_field, str):
-            return location_field
-        
-        if isinstance(location_field, dict):
-            # Try common location field names
-            return (
-                location_field.get("label") or
-                location_field.get("name") or
-                location_field.get("city") or
-                str(location_field)
-            )
-        
-        return "Unknown"
+        return []
     
     def standardize_columns(self) -> None:
         """
@@ -121,17 +94,21 @@ class EventPreprocessor:
         
         for idx, row in self.df.iterrows():
             try:
-                event_date = self._extract_event_date(row.get("dates", []))
-                location = self._extract_location(row.get("location", {}))
+                timings = self._extract_event_date(row.get("timings", []))
                 
                 standardized_row = {
-                    "id": row.get("id", f"unknown_{idx}"),
-                    "title": row.get("title", "No title").strip(),
-                    "description": row.get("description", "").strip(),
-                    "event_date": event_date,
-                    "location": location,
-                    "url": row.get("url", ""),
                     "uid": row.get("uid", ""),
+                    "title_fr": str(row.get("title_fr", "No title")).strip(),
+                    "description_fr": str(row.get("description", "")).strip(),
+                    "longdescription_fr": str(row.get("longdescription_fr", "")).strip(),
+                    "timings": timings,
+                    "location_name": row.get("location_name", ""),
+                    "location_city": row.get("location_city", ""),
+                    "location_address": row.get("location_address", ""),
+                    "conditions_fr": row.get("conditions_fr", ""),
+                    "canonicalurl": row.get("canonicalurl", ""),
+                    "location_lat": row.get("location_coordinates", {}).get("lat"),
+                    "location_lon": row.get("location_coordinates", {}).get("lon"),
                 }
                 
                 standardized.append(standardized_row)
@@ -147,7 +124,7 @@ class EventPreprocessor:
         """Remove duplicate events by ID"""
         initial_count = len(self.df)
         
-        self.df = self.df.drop_duplicates(subset=['id'], keep='first')
+        self.df = self.df.drop_duplicates(subset=['uid'], keep='first')
         
         removed = initial_count - len(self.df)
         logger.info(f"Removed {removed} duplicates")
@@ -157,15 +134,21 @@ class EventPreprocessor:
         """Handle missing values appropriately"""
         logger.info("Handling missing values...")
         
+        # Fill missing title
+        self.df['title_fr'] = self.df['title_fr'].fillna('')
+        
         # Fill missing descriptions
-        self.df['description'] = self.df['description'].fillna('')
+        self.df['description_fr'] = self.df['description_fr'].fillna('')
+        
+        # Fill missing longdescription_fr
+        self.df['longdescription_fr'] = self.df['longdescription_fr'].fillna('')
         
         # Fill missing URLs
-        self.df['url'] = self.df['url'].fillna('')
+        self.df['canonicalurl'] = self.df['canonicalurl'].fillna('')
         
         # Drop rows with missing date (cannot filter without it)
         before_drop = len(self.df)
-        self.df = self.df.dropna(subset=['event_date'])
+        self.df = self.df.dropna(subset=['timings'])
         dropped = before_drop - len(self.df)
         
         if dropped > 0:
@@ -174,38 +157,13 @@ class EventPreprocessor:
         
         # Drop rows with missing location
         before_drop = len(self.df)
-        self.df = self.df[self.df['location'] != 'Unknown']
+        self.df = self.df[self.df['location_city'] != 'Unknown']
         dropped = before_drop - len(self.df)
         
         if dropped > 0:
             logger.warning(f"Dropped {dropped} events with unknown location")
             self.stats['unknown_location_dropped'] = dropped
     
-    def filter_by_date_range(self, days_back: int = 365) -> None:
-        """
-        Filter events within specified date range.
-        Keeps events from (now - days_back) to (now + 1 year in future).
-        
-        Args:
-            days_back: How many days back to keep (default: 365)
-        """
-        logger.info(f"Filtering by date range ({days_back} days back)...")
-        
-        now = datetime.now()
-        cutoff_past = now - timedelta(days=days_back)
-        cutoff_future = now + timedelta(days=365)  # Keep 1 year in future
-        
-        before = len(self.df)
-        
-        self.df = self.df[
-            (self.df['event_date'] >= cutoff_past) &
-            (self.df['event_date'] <= cutoff_future)
-        ]
-        
-        removed = before - len(self.df)
-        logger.info(f"Filtered by date: {removed} events removed")
-        logger.info(f"Date range: {cutoff_past.date()} to {cutoff_future.date()}")
-        self.stats['date_filtered'] = removed
     
     def validate_text_content(self, min_length: int = 10) -> None:
         """
@@ -219,22 +177,30 @@ class EventPreprocessor:
         
         before = len(self.df)
         
-        # Combine title and description, check length
-        self.df['combined_text'] = self.df['title'].fillna('').str.cat(self.df['description'].fillna(''), sep='')
-        self.df = self.df[self.df['combined_text'].str.len() >= min_length]
-        self.df = self.df.drop(columns=['combined_text'])
-        
+        # Combine title, description and longdescription, check length
+        self.df['text_length'] = (
+        self.df['title_fr'].str.len() + 
+        self.df['description_fr'].str.len()+
+        self.df['longdescription_fr'].str.len()
+        )
+    
+        # Keep only events with sufficient text
+        self.df = self.df[self.df['text_length'] >= min_length]
+        self.df = self.df.drop(columns=['text_length'])
+       
         removed = before - len(self.df)
         
         if removed > 0:
             logger.warning(f"Removed {removed} events with insufficient text")
             self.stats['insufficient_text_removed'] = removed
     
+
     def sort_and_reset_index(self) -> None:
         """Sort by event date and reset index"""
-        self.df = self.df.sort_values('event_date').reset_index(drop=True)
-        logger.info("Sorted by event date")
+        self.df = self.df.sort_values('uid').reset_index(drop=True)
+        logger.info("Sorted by event uid")
     
+
     def run_full_pipeline(self, days_back: int = 365) -> None:
         """
         Execute complete preprocessing pipeline.
@@ -249,7 +215,6 @@ class EventPreprocessor:
         self.standardize_columns()
         self.drop_duplicates()
         self.handle_missing_values()
-        self.filter_by_date_range(days_back=days_back)
         self.validate_text_content()
         self.sort_and_reset_index()
         
@@ -271,22 +236,21 @@ class EventPreprocessor:
     
     def save_processed_data(self, output_path) -> str:
         """
-        Save processed events as CSV.
+        Save processed events as JSON.
         
         Args:
-            output_path: Path to save CSV file
+            output_path: Path to save JSON file
             
         Returns:
-            Path to saved CSV
+            Path to saved JSON
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # Convert datetime to string for CSV serialization
         df_export = self.df.copy()
-        df_export['event_date'] = df_export['event_date'].astype(str)
         
-        df_export.to_csv(output_path, index=False, encoding='utf-8')
+        # Save as JSON (preserve complex types)
+        df_export.to_json(output_path, orient='records', indent=2, force_ascii=False)
         
         file_size_mb = output_path.stat().st_size / (1024 * 1024)
         logger.info(f"✅ Processed data saved: {output_path}")
@@ -300,11 +264,7 @@ class EventPreprocessor:
         return self.df
 
 
-def preprocess_snapshot(
-    snapshot_path: str,
-    days_back: int = 365,
-    output_path = None
-) -> str:
+def preprocess_snapshot(snapshot_path: str, days_back: int = 365, output_path = None) -> str:
     """
     High-level function to preprocess snapshot.
     
@@ -319,7 +279,7 @@ def preprocess_snapshot(
     from config import SnapshotConfig
     
     # Initialize preprocessor
-    preprocessor = EventPreprocessor(snapshot_path)
+    preprocessor = EventPreprocessor(snapshot_path, days_back = SnapshotConfig.DAYS_BACK)
     
     # Run pipeline
     preprocessor.run_full_pipeline(days_back=days_back)
