@@ -73,7 +73,7 @@ class EventPreprocessor:
             dates_field = json.loads(dates_field)
             for date_field in dates_field:
                 # Filter dates that not in correct range
-                if date_field['end'] >= self.cutoff_date:
+                if date_field['begin'] >= self.cutoff_date:
                     filtered_dates.append(date_field)    
             return filtered_dates
                 
@@ -95,23 +95,23 @@ class EventPreprocessor:
         for idx, row in self.df.iterrows():
             try:
                 timings = self._extract_event_date(row.get("timings", []))
-                
-                standardized_row = {
-                    "uid": row.get("uid", ""),
-                    "title_fr": str(row.get("title_fr", "No title")).strip(),
-                    "description_fr": str(row.get("description", "")).strip(),
-                    "longdescription_fr": str(row.get("longdescription_fr", "")).strip(),
-                    "timings": timings,
-                    "location_name": row.get("location_name", ""),
-                    "location_city": row.get("location_city", ""),
-                    "location_address": row.get("location_address", ""),
-                    "conditions_fr": row.get("conditions_fr", ""),
-                    "canonicalurl": row.get("canonicalurl", ""),
-                    "location_lat": row.get("location_coordinates", {}).get("lat"),
-                    "location_lon": row.get("location_coordinates", {}).get("lon"),
-                }
-                
-                standardized.append(standardized_row)
+                if len(timings) > 0 : 
+                    standardized_row = {
+                        "uid": row.get("uid", ""),
+                        "title_fr": str(row.get("title_fr", "No title")).strip(),
+                        "description_fr": str(row.get("description", "")).strip(),
+                        "longdescription_fr": str(row.get("longdescription_fr", "")).strip(),
+                        "timings": timings,
+                        "location_name": row.get("location_name", ""),
+                        "location_city": row.get("location_city", ""),
+                        "location_address": row.get("location_address", ""),
+                        "conditions_fr": row.get("conditions_fr", ""),
+                        "canonicalurl": row.get("canonicalurl", ""),
+                        "location_lat": row.get("location_coordinates", {}).get("lat"),
+                        "location_lon": row.get("location_coordinates", {}).get("lon"),
+                    }
+                    
+                    standardized.append(standardized_row)
             
             except Exception as e:
                 logger.debug(f"Error standardizing row {idx}: {str(e)}")
@@ -164,6 +164,7 @@ class EventPreprocessor:
             logger.warning(f"Dropped {dropped} events with unknown location")
             self.stats['unknown_location_dropped'] = dropped
     
+
     
     def validate_text_content(self, min_length: int = 10) -> None:
         """
