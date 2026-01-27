@@ -198,7 +198,7 @@ Examples:
         "--max-pages",
         type=int,
         default=SnapshotConfig.MAX_PAGES,
-        help="List all available snapshots and exit"
+        help="Number of pages to collect"
     )
 
     args = parser.parse_args()
