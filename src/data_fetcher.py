@@ -53,7 +53,7 @@ class OpenAgendaFetcher:
         """
         start_date = (datetime.now() - timedelta(days=self.days_back)).isoformat()
         loc_condition = f"location_region='{self.region}'" 
-        date_condition = f"lastdate_end>='{start_date}'"
+        date_condition = f"lastdate_begin>='{start_date}'"
         
         params = {
             "limit": limit,                  # Items per page
