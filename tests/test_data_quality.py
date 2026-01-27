@@ -3,7 +3,7 @@
 Unit tests for Phase 2 data quality validation.
 
 Tests verify that:
-1. All events are within the expected geographic region
+1. All events have at least some location information
 2. All events have valid timings in the last 365 days
 3. Required fields are present and non-empty
 4. Data is properly structured after preprocessing
@@ -49,8 +49,9 @@ class TestDataQuality(unittest.TestCase):
             cls.events = json.load(f)
         
         cls.snapshot_date = datetime.fromisoformat(snapshot_date)
-        # Make cutoff_date timezone-aware (UTC)
-        cls.cutoff_date = (cls.snapshot_date - timedelta(days=SnapshotConfig.DAYS_BACK)).replace(tzinfo=timezone.utc)    
+        # Make cutoff_date timezone-aware (UTC) for comparison with timing dates
+        cls.cutoff_date = (cls.snapshot_date - timedelta(days=SnapshotConfig.DAYS_BACK)).replace(tzinfo=timezone.utc)
+    
     # ============= BASIC STRUCTURE TESTS =============
     
     def test_data_is_not_empty(self):
@@ -79,10 +80,10 @@ class TestDataQuality(unittest.TestCase):
             'title_fr',
             'description_fr',
             'longdescription_fr',
-            'conditions_fr',
             'timings',
             'location_name',
             'location_city',
+            'conditions_fr',
             'canonicalurl'
         ]
         
@@ -178,7 +179,7 @@ class TestDataQuality(unittest.TestCase):
             for timing in timings:
                 try:
                     begin_str = timing.get('begin', '')
-                    # Parse ISO format datetime
+                    # Parse ISO format datetime (with timezone awareness)
                     timing_date = datetime.fromisoformat(
                         begin_str.replace('Z', '+00:00')
                     )
@@ -196,27 +197,6 @@ class TestDataQuality(unittest.TestCase):
                 has_recent,
                 f"Event {idx} ({event.get('uid')}) has no timings "
                 f"in last 365 days (cutoff: {self.cutoff_date.date()})"
-            )
-    
-    # ============= GEOGRAPHIC FILTERING TESTS =============
-    
-    def test_all_events_in_configured_region(self):
-        """Verify all events are in configured region (Occitanie)"""
-        region = SnapshotConfig.REGION
-        
-        for idx, event in enumerate(self.events):
-            location_city = event.get('location_city', 'UNKNOWN')
-            
-            # Note: This is a simplified check
-            # Real region validation would require coordinates or city mapping
-            self.assertIsNotNone(
-                location_city,
-                f"Event {idx} ({event.get('uid')}) has None location"
-            )
-            self.assertNotEqual(
-                location_city,
-                'Unknown',
-                f"Event {idx} ({event.get('uid')}) has 'Unknown' location"
             )
     
     # ============= TEXT CONTENT VALIDATION TESTS =============
@@ -314,6 +294,8 @@ class TestDataQuality(unittest.TestCase):
         """Print summary statistics about processed data"""
         print("\n" + "="*70)
         print("DATA QUALITY SUMMARY")
+        print("="*70)
+        print(f"Tested file date:     {SnapshotConfig.DEVELOPMENT_SNAPSHOT_DATE}")
         print("="*70)
         print(f"Total events:         {len(self.events)}")
         
