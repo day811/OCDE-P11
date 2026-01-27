@@ -125,6 +125,7 @@ class OpenAgendaFetcher:
         logger.info(f"Region:     {self.region}")
         logger.info(f"Period:     {self.days_back} days")
         logger.info(f"Limit:      {limit} events/page")
+        logger.info(f"Pages max:      {max_pages} ")
         
         all_events = []
         page = 1
@@ -221,6 +222,7 @@ class OpenAgendaFetcher:
 def fetch_events_snapshot(
     region: str = "Occitanie",
     days_back: int = 365,
+    max_pages: int = 100,
     snapshot_date = None,
     output_dir = None
 ) -> str:
@@ -238,7 +240,6 @@ def fetch_events_snapshot(
     """
     from config import SnapshotConfig
 
-    max_pages = SnapshotConfig.MAX_PAGES
     
     if snapshot_date is None:
         snapshot_date = datetime.now().strftime("%Y-%m-%d")
