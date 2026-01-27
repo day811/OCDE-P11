@@ -20,7 +20,7 @@ from src.preprocessing import preprocess_snapshot
 class PipelineOrchestrator:
     """Orchestrate complete data pipeline"""
     
-    def __init__(self, region: str, days_back: int, snapshot_date = None):
+    def __init__(self, region: str, days_back: int, max_pages: int, snapshot_date = None):
         """
         Initialize orchestrator.
         
@@ -30,6 +30,7 @@ class PipelineOrchestrator:
             snapshot_date: Force specific snapshot date (YYYY-MM-DD)
         """
         self.region = region
+        self.max_pages = max_pages
         self.days_back = days_back
         
         if snapshot_date is None:
@@ -64,6 +65,7 @@ class PipelineOrchestrator:
             self.raw_snapshot_path = fetch_events_snapshot(
                 region=self.region,
                 days_back=self.days_back,
+                max_pages=self.max_pages,
                 snapshot_date=self.snapshot_date
             )
             
@@ -191,7 +193,14 @@ Examples:
         action="store_true",
         help="List all available snapshots and exit"
     )
-    
+
+    parser.add_argument(
+        "--max-pages",
+        type=int,
+        default=SnapshotConfig.MAX_PAGES,
+        help="List all available snapshots and exit"
+    )
+
     args = parser.parse_args()
     
     # Handle list-indexes command
@@ -203,6 +212,7 @@ Examples:
     orchestrator = PipelineOrchestrator(
         region=args.region,
         days_back=args.days,
+        max_pages = args.max_pages,
         snapshot_date=args.snapshot_date
     )
     
