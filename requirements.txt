@@ -1,5 +1,5 @@
-langchain 
-faiss-cpu 
-mistralai
-pandas
-dotenv
+llangchain==1.2.7
+faiss-cpu==1.13.2
+mistralai==1.10.1
+pandas==3.0.0
+dotenv==0.9.9
