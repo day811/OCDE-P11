@@ -181,6 +181,7 @@ class EventPreprocessor:
         # Combine title, description and longdescription, check length
         self.df['text_length'] = (
         self.df['title_fr'].str.len() + 
+        self.df['conditions_fr'].str.len() + 
         self.df['description_fr'].str.len()+
         self.df['longdescription_fr'].str.len()
         )
