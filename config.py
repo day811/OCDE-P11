@@ -168,12 +168,12 @@ class SnapshotConfig:
     
     @classmethod
     def get_processed_snapshot_path(cls, snapshot_date: str = "") -> str:
-        """Get path for processed snapshot CSV"""
+        """Get path for processed snapshot JSON"""
         if snapshot_date == "":
             from datetime import datetime
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
-        return str(cls.PROCESSED_DATA_DIR / f"processed_events_{snapshot_date}.csv")
+        return str(cls.PROCESSED_DATA_DIR / f"processed_events_{snapshot_date}.json")
     
     @classmethod
     def get_index_path(cls, snapshot_date: str = "") -> str:
