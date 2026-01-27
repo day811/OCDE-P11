@@ -36,7 +36,7 @@ class SnapshotConfig:
     
     # ============= SNAPSHOT CONFIGURATION =============
     # FROZEN snapshot for reproducible testing (Phase 2-5)
-    DEVELOPMENT_SNAPSHOT_DATE = "2026-01-26"
+    DEVELOPMENT_SNAPSHOT_DATE = "2026-01-27"
     
     # Current execution environment
     ENVIRONMENT = Environment[os.getenv("RAG_ENVIRONMENT", "development").upper()]
