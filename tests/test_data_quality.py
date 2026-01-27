@@ -174,7 +174,7 @@ class TestDataQuality(unittest.TestCase):
         """Verify all events have at least one timing in last 365 days"""
         for idx, event in enumerate(self.events):
             timings = event.get('timings', [])
-            
+            begin_str = ""  # initialization to satisfy the linter
             has_recent = False
             for timing in timings:
                 try:

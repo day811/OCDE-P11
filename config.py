@@ -7,6 +7,7 @@ from enum import Enum
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from typing import cast
 
 
 load_dotenv()
@@ -119,7 +120,7 @@ class SnapshotConfig:
         Returns:
             Path to metadata JSON file
         """
-        index_path = cls.get_active_index_path()
+        index_path = cast(str, cls.get_active_index_path())
         metadata_path = index_path.replace("faiss_index_", "metadata_").replace(".bin", ".json")
         
         if not Path(metadata_path).exists():
