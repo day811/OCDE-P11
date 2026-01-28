@@ -20,7 +20,7 @@ class Environment(Enum):
     PRODUCTION = "production"    # After delivery
 
 
-class SnapshotConfig:
+class Config:
     """Manage snapshot versions and index selection"""
     
     # ============= PATHS =============
@@ -55,6 +55,28 @@ class SnapshotConfig:
     # Max pages limit to fetch
     MAX_PAGES = os.getenv("MAX_PAGES", None)
     if MAX_PAGES : MAX_PAGES=int(MAX_PAGES)
+
+    # ============= FIELDS =============
+    UID = "uid"
+    TITLE = "title_fr"
+    DESC = "description_fr"
+    LONG_DESC = "longdescription_fr"
+    LOC_NAME = "location_name"
+    LOC_DEPT = "location_department"
+    LOC_CITY = "location_city"
+    LOC_ADDRESS = "location_address"
+    CONDITIONS = "conditions_fr"
+    URL = "canonicalurl"
+    LOC_COORD = "location_coordinates"
+    LOC_LAT = "location_lat"
+    LOC_LON = "location_lon"
+    TIMINGS = "timings"
+    
+    
+    SELECTED_FIELDS = [UID, TITLE, DESC, LONG_DESC, LOC_NAME, LOC_DEPT, LOC_CITY, LOC_ADDRESS, CONDITIONS, URL, TIMINGS, LOC_COORD ]
+    REQUIRED_FIELDS = [UID, DESC, LOC_ADDRESS, TIMINGS]
+    CHUNK_FIELDS = [TITLE, DESC, LONG_DESC, CONDITIONS]
+    
     
     # ============= METHODS =============
     

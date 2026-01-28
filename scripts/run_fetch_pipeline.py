@@ -12,7 +12,7 @@ import argparse
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import SnapshotConfig
+from config import Config
 from src.data_fetcher import fetch_events_snapshot
 from src.preprocessing import preprocess_snapshot
 
@@ -114,7 +114,7 @@ class PipelineOrchestrator:
             print(f"Processed:      {self.processed_path}")
             
             # Check if this is development snapshot
-            if self.snapshot_date == SnapshotConfig.DEVELOPMENT_SNAPSHOT_DATE:
+            if self.snapshot_date == Config.DEVELOPMENT_SNAPSHOT_DATE:
                 print(f"\n🔒 This is your DEVELOPMENT snapshot - FROZEN for testing")
             else:
                 print(f"\n⭐ This is a LIVE snapshot - will be updated on next pipeline run")
@@ -135,7 +135,7 @@ class PipelineOrchestrator:
             0 if successful, 1 if failed
         """
         self.print_header()
-        SnapshotConfig.print_config()
+        Config.print_config()
         
         # Step 1: Fetch
         if not self.step_1_fetch():
@@ -171,16 +171,22 @@ Examples:
     )
     
     parser.add_argument(
+        "--environment",
+        default=Config.ENVIRONMENT,
+        help=f"Execution mode (default: {Config.ENVIRONMENT})"
+    )
+    
+    parser.add_argument(
         "--region",
-        default=SnapshotConfig.REGION,
-        help=f"Geographic region (default: {SnapshotConfig.REGION})"
+        default=Config.REGION,
+        help=f"Geographic region (default: {Config.REGION})"
     )
     
     parser.add_argument(
         "--days",
         type=int,
-        default=SnapshotConfig.DAYS_BACK,
-        help=f"Historical period in days (default: {SnapshotConfig.DAYS_BACK})"
+        default=Config.DAYS_BACK,
+        help=f"Historical period in days (default: {Config.DAYS_BACK})"
     )
     
     parser.add_argument(
@@ -197,7 +203,7 @@ Examples:
     parser.add_argument(
         "--max-pages",
         type=int,
-        default=SnapshotConfig.MAX_PAGES,
+        default=Config.MAX_PAGES,
         help="Number of pages to collect"
     )
 
@@ -205,7 +211,7 @@ Examples:
     
     # Handle list-indexes command
     if args.list_indexes:
-        SnapshotConfig.print_available_indexes()
+        Config.print_available_indexes()
         return 0
     
     # Run pipeline
@@ -213,7 +219,7 @@ Examples:
         region=args.region,
         days_back=args.days,
         max_pages = args.max_pages,
-        snapshot_date=args.snapshot_date
+        snapshot_date=args.snapshot_date,
     )
     
     return orchestrator.run()

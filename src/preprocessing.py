@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Tuple, Optional
 import logging
+from config import Config
+
 
 
 # Configure logging
@@ -94,21 +96,22 @@ class EventPreprocessor:
         
         for idx, row in self.df.iterrows():
             try:
-                timings = self._extract_event_date(row.get("timings", []))
+                timings = self._extract_event_date(row.get(Config.TIMINGS, []))
                 if len(timings) > 0 : 
                     standardized_row = {
-                        "uid": row.get("uid", ""),
-                        "title_fr": str(row.get("title_fr", "No title")).strip(),
-                        "description_fr": str(row.get("description", "")).strip(),
-                        "longdescription_fr": str(row.get("longdescription_fr", "")).strip(),
-                        "timings": timings,
-                        "location_name": row.get("location_name", ""),
-                        "location_city": row.get("location_city", ""),
-                        "location_address": row.get("location_address", ""),
-                        "conditions_fr": row.get("conditions_fr", ""),
-                        "canonicalurl": row.get("canonicalurl", ""),
-                        "location_lat": row.get("location_coordinates", {}).get("lat"),
-                        "location_lon": row.get("location_coordinates", {}).get("lon"),
+                        Config.UID: row.get(Config.UID, ""),
+                        Config.TITLE: str(row.get(Config.TITLE, "No title")).strip(),
+                        Config.DESC: str(row.get(Config.DESC, "")).strip(),
+                        Config.LONG_DESC: str(row.get(Config.LONG_DESC, "")).strip(),
+                        Config.TIMINGS: timings,
+                        Config.LOC_NAME: row.get(Config.LOC_NAME, ""),
+                        Config.LOC_CITY: row.get(Config.LOC_CITY, ""),
+                        Config.LOC_DEPT: row.get(Config.LOC_DEPT, ""),
+                        Config.LOC_ADDRESS: row.get(Config.LOC_ADDRESS, ""),
+                        Config.URL: row.get(Config.URL, ""),
+                        Config.CONDITIONS: row.get(Config.CONDITIONS, ""),
+                        Config.LOC_LAT: row.get(Config.LOC_COORD, {}).get("lat"),
+                        Config.LOC_LON: row.get(Config.LOC_COORD, {}).get("lon"),
                     }
                     
                     standardized.append(standardized_row)
@@ -135,20 +138,20 @@ class EventPreprocessor:
         logger.info("Handling missing values...")
         
         # Fill missing title
-        self.df['title_fr'] = self.df['title_fr'].fillna('')
+        self.df[Config.TITLE] = self.df[Config.TITLE].fillna('')
         
         # Fill missing descriptions
-        self.df['description_fr'] = self.df['description_fr'].fillna('')
+        self.df[Config.DESC] = self.df[Config.DESC].fillna('')
         
         # Fill missing longdescription_fr
-        self.df['longdescription_fr'] = self.df['longdescription_fr'].fillna('')
+        self.df[Config.LONG_DESC] = self.df[Config.LONG_DESC].fillna('')
         
-        # Fill missing URLs
-        self.df['canonicalurl'] = self.df['canonicalurl'].fillna('')
+        # Fill missing conditions_fr
+        self.df[Config.CONDITIONS] = self.df[Config.CONDITIONS].fillna('')
         
         # Drop rows with missing date (cannot filter without it)
         before_drop = len(self.df)
-        self.df = self.df.dropna(subset=['timings'])
+        self.df = self.df.dropna(subset=[Config.TIMINGS])
         dropped = before_drop - len(self.df)
         
         if dropped > 0:
@@ -157,7 +160,7 @@ class EventPreprocessor:
         
         # Drop rows with missing location
         before_drop = len(self.df)
-        self.df = self.df[self.df['location_city'] != 'Unknown']
+        self.df = self.df[self.df[Config.LOC_CITY] != 'Unknown']
         dropped = before_drop - len(self.df)
         
         if dropped > 0:
@@ -179,13 +182,8 @@ class EventPreprocessor:
         before = len(self.df)
         
         # Combine title, description and longdescription, check length
-        self.df['text_length'] = (
-        self.df['title_fr'].str.len() + 
-        self.df['conditions_fr'].str.len() + 
-        self.df['description_fr'].str.len()+
-        self.df['longdescription_fr'].str.len()
-        )
-    
+        self.df['text_length'] = sum( self.df[field].str.len() for field in Config.CHUNK_FIELDS)
+     
         # Keep only events with sufficient text
         self.df = self.df[self.df['text_length'] >= min_length]
         self.df = self.df.drop(columns=['text_length'])
@@ -278,10 +276,9 @@ def preprocess_snapshot(snapshot_path: str, days_back: int = 365, output_path = 
     Returns:
         Path to processed CSV file
     """
-    from config import SnapshotConfig
-    
+   
     # Initialize preprocessor
-    preprocessor = EventPreprocessor(snapshot_path, days_back = SnapshotConfig.DAYS_BACK)
+    preprocessor = EventPreprocessor(snapshot_path, days_back = Config.DAYS_BACK)
     
     # Run pipeline
     preprocessor.run_full_pipeline(days_back=days_back)
@@ -290,7 +287,7 @@ def preprocess_snapshot(snapshot_path: str, days_back: int = 365, output_path = 
     if output_path is None:
         # Extract snapshot date from input path
         snapshot_date = Path(snapshot_path).stem.replace("raw_snapshot_", "")
-        output_path = SnapshotConfig.get_processed_snapshot_path(snapshot_date)
+        output_path = Config.get_processed_snapshot_path(snapshot_date)
     
     # Save processed data
     processed_path = preprocessor.save_processed_data(output_path)
@@ -300,17 +297,16 @@ def preprocess_snapshot(snapshot_path: str, days_back: int = 365, output_path = 
 
 if __name__ == "__main__":
     # Example usage
-    from config import SnapshotConfig
     
-    SnapshotConfig.print_config()
+    Config.print_config()
     
     # Assuming snapshot already exists
-    snapshot_path = SnapshotConfig.get_raw_snapshot_path("2026-01-25")
+    snapshot_path = Config.get_raw_snapshot_path("2026-01-25")
     
     if Path(snapshot_path).exists():
         processed_path = preprocess_snapshot(
             snapshot_path=snapshot_path,
-            days_back=SnapshotConfig.DAYS_BACK
+            days_back=Config.DAYS_BACK
         )
         print(f"\n✅ Done! Processed file: {processed_path}")
     else:

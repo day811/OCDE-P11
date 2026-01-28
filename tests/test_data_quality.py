@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import SnapshotConfig
+from config import Config
 from src.preprocessing import EventPreprocessor
 
 
@@ -34,8 +34,8 @@ class TestDataQuality(unittest.TestCase):
     def setUpClass(cls):
         """Load processed data once for all tests"""
         # Use development snapshot
-        snapshot_date = SnapshotConfig.DEVELOPMENT_SNAPSHOT_DATE
-        processed_path = SnapshotConfig.get_processed_snapshot_path(snapshot_date)
+        snapshot_date = Config.DEVELOPMENT_SNAPSHOT_DATE
+        processed_path = Config.get_processed_snapshot_path(snapshot_date)
         
         if not Path(processed_path).exists():
             raise FileNotFoundError(
@@ -50,7 +50,7 @@ class TestDataQuality(unittest.TestCase):
         
         cls.snapshot_date = datetime.fromisoformat(snapshot_date)
         # Make cutoff_date timezone-aware (UTC) for comparison with timing dates
-        cls.cutoff_date = (cls.snapshot_date - timedelta(days=SnapshotConfig.DAYS_BACK)).replace(tzinfo=timezone.utc)
+        cls.cutoff_date = (cls.snapshot_date - timedelta(days=Config.DAYS_BACK)).replace(tzinfo=timezone.utc)
     
     # ============= BASIC STRUCTURE TESTS =============
     
@@ -76,15 +76,15 @@ class TestDataQuality(unittest.TestCase):
     def test_all_events_have_required_fields(self):
         """Verify all events have required fields"""
         required_fields = [
-            'uid',
-            'title_fr',
-            'description_fr',
-            'longdescription_fr',
-            'timings',
-            'location_name',
-            'location_city',
-            'conditions_fr',
-            'canonicalurl'
+            Config.UID,
+            Config.TITLE,
+            Config.DESC,
+            Config.LONG_DESC,
+            Config.TIMINGS,
+            Config.LOC_NAME,
+            Config.LOC_CITY,
+            Config.CONDITIONS,
+            Config.URL
         ]
         
         for idx, event in enumerate(self.events):
@@ -92,14 +92,14 @@ class TestDataQuality(unittest.TestCase):
                 self.assertIn(
                     field,
                     event,
-                    f"Event {idx} ({event.get('uid', 'UNKNOWN')}) "
+                    f"Event {idx} ({event.get(Config.UID, 'UNKNOWN')}) "
                     f"missing required field: {field}"
                 )
     
     def test_all_events_have_uid(self):
         """Verify all events have non-empty UID"""
         for idx, event in enumerate(self.events):
-            uid = event.get('uid', '')
+            uid = event.get(Config.UID, '')
             self.assertTrue(
                 uid and len(str(uid)) > 0,
                 f"Event {idx} has empty or missing UID"
@@ -108,18 +108,18 @@ class TestDataQuality(unittest.TestCase):
     def test_all_events_have_title(self):
         """Verify all events have non-empty French title"""
         for idx, event in enumerate(self.events):
-            title = event.get('title_fr', '')
+            title = event.get(Config.TITLE, '')
             self.assertTrue(
                 title and len(str(title).strip()) > 0,
-                f"Event {idx} ({event.get('uid')}) has empty title"
+                f"Event {idx} ({event.get(Config.UID)}) has empty title"
             )
     
     def test_all_events_have_location(self):
         """Verify all events have at least some location information"""
         for idx, event in enumerate(self.events):
-            location_city = event.get('location_city', '')
-            location_name = event.get('location_name', '')
-            location_address = event.get('location_address', '')
+            location_city = event.get(Config.LOC_CITY, '')
+            location_name = event.get(Config.LOC_NAME, '')
+            location_address = event.get(Config.LOC_ADDRESS, '')
             
             # At least one location field must have content
             has_location = (
@@ -130,7 +130,7 @@ class TestDataQuality(unittest.TestCase):
             
             self.assertTrue(
                 has_location,
-                f"Event {idx} ({event.get('uid')}) has no location information "
+                f"Event {idx} ({event.get(Config.UID)}) has no location information "
                 f"(city, name, address all empty)"
             )
     
@@ -139,41 +139,41 @@ class TestDataQuality(unittest.TestCase):
     def test_all_events_have_timings(self):
         """Verify all events have at least one timing"""
         for idx, event in enumerate(self.events):
-            timings = event.get('timings', [])
+            timings = event.get(Config.TIMINGS, [])
             self.assertIsInstance(
                 timings,
                 list,
-                f"Event {idx} ({event.get('uid')}) timings is not a list"
+                f"Event {idx} ({event.get(Config.UID)}) timings is not a list"
             )
             self.assertGreater(
                 len(timings),
                 0,
-                f"Event {idx} ({event.get('uid')}) has no timings"
+                f"Event {idx} ({event.get(Config.UID)}) has no timings"
             )
     
     def test_all_timings_have_begin_and_end(self):
         """Verify all timing entries have begin and end dates"""
         for event_idx, event in enumerate(self.events):
-            timings = event.get('timings', [])
+            timings = event.get(Config.TIMINGS, [])
             
             for timing_idx, timing in enumerate(timings):
                 self.assertIn(
                     'begin',
                     timing,
-                    f"Event {event_idx} ({event.get('uid')}) "
+                    f"Event {event_idx} ({event.get(Config.UID)}) "
                     f"timing {timing_idx} missing 'begin'"
                 )
                 self.assertIn(
                     'end',
                     timing,
-                    f"Event {event_idx} ({event.get('uid')}) "
+                    f"Event {event_idx} ({event.get(Config.UID)}) "
                     f"timing {timing_idx} missing 'end'"
                 )
     
     def test_all_events_have_recent_timings(self):
         """Verify all events have at least one timing in last 365 days"""
         for idx, event in enumerate(self.events):
-            timings = event.get('timings', [])
+            timings = event.get(Config.TIMINGS, [])
             begin_str = ""  # initialization to satisfy the linter
             has_recent = False
             for timing in timings:
@@ -189,13 +189,13 @@ class TestDataQuality(unittest.TestCase):
                         break
                 except (ValueError, AttributeError) as e:
                     self.fail(
-                        f"Event {idx} ({event.get('uid')}) "
+                        f"Event {idx} ({event.get(Config.UID)}) "
                         f"has unparseable date: {begin_str} - {str(e)}"
                     )
             
             self.assertTrue(
                 has_recent,
-                f"Event {idx} ({event.get('uid')}) has no timings "
+                f"Event {idx} ({event.get(Config.UID)}) has no timings "
                 f"in last 365 days (cutoff: {self.cutoff_date.date()})"
             )
     
@@ -206,16 +206,16 @@ class TestDataQuality(unittest.TestCase):
         min_length = 10  # Matches preprocessing validation
         
         for idx, event in enumerate(self.events):
-            title = str(event.get('title_fr', ''))
-            description = str(event.get('description_fr', ''))
-            longdesc = str(event.get('longdescription_fr', ''))
+            title = str(event.get(Config.TITLE, ''))
+            description = str(event.get(Config.DESC, ''))
+            longdesc = str(event.get(Config.LONG_DESC, ''))
             
             total_length = len(title) + len(description) + len(longdesc)
             
             self.assertGreaterEqual(
                 total_length,
                 min_length,
-                f"Event {idx} ({event.get('uid')}) "
+                f"Event {idx} ({event.get(Config.UID)}) "
                 f"has insufficient text: {total_length} chars "
                 f"(min: {min_length})"
             )
@@ -225,20 +225,20 @@ class TestDataQuality(unittest.TestCase):
         html_indicators = ['<html', '<div', '<script', '<iframe']
         
         for idx, event in enumerate(self.events):
-            description = str(event.get('description_fr', '')).lower()
-            longdesc = str(event.get('longdescription_fr', '')).lower()
+            description = str(event.get(Config.DESC, '')).lower()
+            longdesc = str(event.get(Config.LONG_DESC, '')).lower()
             
             for indicator in html_indicators:
                 self.assertNotIn(
                     indicator,
                     description,
-                    f"Event {idx} ({event.get('uid')}) "
+                    f"Event {idx} ({event.get(Config.UID)}) "
                     f"has uncleaned HTML in description_fr: {indicator}"
                 )
                 self.assertNotIn(
                     indicator,
                     longdesc,
-                    f"Event {idx} ({event.get('uid')}) "
+                    f"Event {idx} ({event.get(Config.UID)}) "
                     f"has uncleaned HTML in longdescription_fr: {indicator}"
                 )
     
@@ -246,7 +246,7 @@ class TestDataQuality(unittest.TestCase):
     
     def test_all_uids_are_unique(self):
         """Verify no duplicate events by UID"""
-        uids = [event.get('uid') for event in self.events]
+        uids = [event.get(Config.UID) for event in self.events]
         unique_uids = set(uids)
         
         self.assertEqual(
@@ -266,25 +266,25 @@ class TestDataQuality(unittest.TestCase):
             if lat is not None:
                 self.assertTrue(
                     isinstance(lat, (int, float)),
-                    f"Event {idx} ({event.get('uid')}) "
+                    f"Event {idx} ({event.get(Config.UID)}) "
                     f"has non-numeric latitude: {type(lat)}"
                 )
             
             if lon is not None:
                 self.assertTrue(
                     isinstance(lon, (int, float)),
-                    f"Event {idx} ({event.get('uid')}) "
+                    f"Event {idx} ({event.get(Config.UID)}) "
                     f"has non-numeric longitude: {type(lon)}"
                 )
     
     def test_url_fields_are_strings(self):
         """Verify URL fields are strings"""
         for idx, event in enumerate(self.events):
-            url = event.get('canonicalurl', '')
+            url = event.get(Config.URL, '')
             self.assertIsInstance(
                 url,
                 str,
-                f"Event {idx} ({event.get('uid')}) "
+                f"Event {idx} ({event.get(Config.UID)}) "
                 f"has non-string URL: {type(url)}"
             )
     
@@ -295,14 +295,14 @@ class TestDataQuality(unittest.TestCase):
         print("\n" + "="*70)
         print("DATA QUALITY SUMMARY")
         print("="*70)
-        print(f"Tested file date:     {SnapshotConfig.DEVELOPMENT_SNAPSHOT_DATE}")
+        print(f"Tested file date:     {Config.DEVELOPMENT_SNAPSHOT_DATE}")
         print("="*70)
         print(f"Total events:         {len(self.events)}")
         
         # Region distribution
         cities = {}
         for event in self.events:
-            city = event.get('location_city', 'Unknown')
+            city = event.get(Config.LOC_CITY, 'Unknown')
             cities[city] = cities.get(city, 0) + 1
         
         print(f"Unique cities:        {len(cities)}")
@@ -313,9 +313,9 @@ class TestDataQuality(unittest.TestCase):
         # Text length stats
         text_lengths = []
         for event in self.events:
-            title = str(event.get('title_fr', ''))
-            description = str(event.get('description_fr', ''))
-            longdesc = str(event.get('longdescription_fr', ''))
+            title = str(event.get(Config.TITLE, ''))
+            description = str(event.get(Config.DESC, ''))
+            longdesc = str(event.get(Config.LONG_DESC, ''))
             total = len(title) + len(description) + len(longdesc)
             text_lengths.append(total)
         
@@ -325,7 +325,7 @@ class TestDataQuality(unittest.TestCase):
         print(f"  - Avg length:       {sum(text_lengths)//len(text_lengths)} chars")
         
         # Timing stats
-        total_timings = sum(len(e.get('timings', [])) for e in self.events)
+        total_timings = sum(len(e.get(Config.TIMINGS, [])) for e in self.events)
         print(f"\nTiming stats:")
         print(f"  - Total occurrences: {total_timings}")
         print(f"  - Avg per event:    {total_timings//len(self.events)}")
@@ -338,8 +338,8 @@ class TestPreprocessingPipeline(unittest.TestCase):
     
     def test_preprocessor_initialization(self):
         """Verify preprocessor can be initialized"""
-        snapshot_date = SnapshotConfig.DEVELOPMENT_SNAPSHOT_DATE
-        raw_path = SnapshotConfig.get_raw_snapshot_path(snapshot_date)
+        snapshot_date = Config.DEVELOPMENT_SNAPSHOT_DATE
+        raw_path = Config.get_raw_snapshot_path(snapshot_date)
         
         if not Path(raw_path).exists():
             self.skipTest(f"Raw snapshot not found: {raw_path}")
@@ -350,8 +350,8 @@ class TestPreprocessingPipeline(unittest.TestCase):
     
     def test_pipeline_produces_output(self):
         """Verify preprocessing pipeline produces output file"""
-        snapshot_date = SnapshotConfig.DEVELOPMENT_SNAPSHOT_DATE
-        processed_path = SnapshotConfig.get_processed_snapshot_path(snapshot_date)
+        snapshot_date = Config.DEVELOPMENT_SNAPSHOT_DATE
+        processed_path = Config.get_processed_snapshot_path(snapshot_date)
         
         self.assertTrue(
             Path(processed_path).exists(),
@@ -362,8 +362,8 @@ class TestPreprocessingPipeline(unittest.TestCase):
     
     def test_processed_file_is_valid_json(self):
         """Verify processed data is valid JSON"""
-        snapshot_date = SnapshotConfig.DEVELOPMENT_SNAPSHOT_DATE
-        processed_path = SnapshotConfig.get_processed_snapshot_path(snapshot_date)
+        snapshot_date = Config.DEVELOPMENT_SNAPSHOT_DATE
+        processed_path = Config.get_processed_snapshot_path(snapshot_date)
         
         try:
             with open(processed_path, 'r', encoding='utf-8') as f:

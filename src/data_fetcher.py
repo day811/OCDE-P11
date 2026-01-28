@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 from urllib.parse import urlencode
 import logging
+from config import Config
 
 
 # Configure logging
@@ -54,10 +55,12 @@ class OpenAgendaFetcher:
         start_date = (datetime.now() - timedelta(days=self.days_back)).isoformat()
         loc_condition = f"location_region='{self.region}'" 
         date_condition = f"lastdate_begin>='{start_date}'"
+        field_select = ','.join(Config.SELECTED_FIELDS)
         
         params = {
             "limit": limit,                  # Items per page
             "offset": (page - 1) * limit,   # Pagination offset
+            "select" :  field_select ,
             "where" : f"{loc_condition} AND {date_condition}"
        }
         
@@ -172,9 +175,8 @@ class OpenAgendaFetcher:
         
         for event in self.events:
             # Check required fields
-            required_fields = ["uid", "title_fr", "description_fr", "firstdate_begin", "firstdate_end","lastdate_begin", "lastdate_end","location_city"]
             
-            if all(field in event for field in required_fields):
+            if all(field in event for field in Config.REQUIRED_FIELDS):
                 valid_events.append(event)
             else:
                 invalid_count += 1
@@ -238,14 +240,12 @@ def fetch_events_snapshot(
     Returns:
         Path to saved snapshot JSON
     """
-    from config import SnapshotConfig
-
     
     if snapshot_date is None:
         snapshot_date = datetime.now().strftime("%Y-%m-%d")
     
     if output_dir is None:
-        output_path = SnapshotConfig.get_raw_snapshot_path(snapshot_date)
+        output_path = Config.get_raw_snapshot_path(snapshot_date)
     else:
         output_path = Path(output_dir) / f"raw_snapshot_{snapshot_date}.json"
     
@@ -262,13 +262,12 @@ def fetch_events_snapshot(
 
 if __name__ == "__main__":
     # Example usage
-    from config import SnapshotConfig
     
-    SnapshotConfig.print_config()
+    Config.print_config()
     
     snapshot_path = fetch_events_snapshot(
-        region=SnapshotConfig.REGION,
-        days_back=SnapshotConfig.DAYS_BACK
+        region=Config.REGION,
+        days_back=Config.DAYS_BACK
     )
     
     print(f"\n✅ Done! Snapshot: {snapshot_path}")
