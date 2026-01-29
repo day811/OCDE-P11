@@ -165,7 +165,11 @@ class PipelineOrchestrator:
         if not self.step_2_preprocess():
             return self.print_summary(False)
         
-        # Success
+        # Step 3: Preprocess
+        if not self.step3_vectorize_and_index():
+            return self.print_summary(False)
+ 
+         # Success
         return self.print_summary(True)
 
 
