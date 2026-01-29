@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from typing import cast
+from datetime import datetime
 
 
 load_dotenv()
@@ -37,7 +38,7 @@ class Config:
     
     # ============= SNAPSHOT CONFIGURATION =============
     # FROZEN snapshot for reproducible testing (Phase 2-5)
-    DEVELOPMENT_SNAPSHOT_DATE = "2026-01-27"
+    DEVELOPMENT_SNAPSHOT_DATE = os.getenv("DEV_SNAPSHOT_DATE")
     
     # Current execution environment
     ENVIRONMENT = Environment[os.getenv("RAG_ENVIRONMENT", "development").upper()]
@@ -184,7 +185,6 @@ class Config:
     def get_raw_snapshot_path(cls, snapshot_date: str = "") -> str:
         """Get path for raw snapshot JSON"""
         if snapshot_date == "":
-            from datetime import datetime
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
         return str(cls.RAW_DATA_DIR / f"raw_snapshot_{snapshot_date}.json")
@@ -193,7 +193,6 @@ class Config:
     def get_processed_snapshot_path(cls, snapshot_date: str = "") -> str:
         """Get path for processed snapshot JSON"""
         if snapshot_date == "":
-            from datetime import datetime
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
         return str(cls.PROCESSED_DATA_DIR / f"processed_events_{snapshot_date}.json")
@@ -202,7 +201,6 @@ class Config:
     def get_index_path(cls, snapshot_date: str = "") -> str:
         """Get path for Faiss index"""
         if snapshot_date == "":
-            from datetime import datetime
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
         return str(cls.INDEXES_DIR / f"faiss_index_{snapshot_date}.bin")
@@ -211,7 +209,6 @@ class Config:
     def get_metadata_path(cls, snapshot_date: str = "") -> str:
         """Get path for metadata JSON"""
         if snapshot_date == "":
-            from datetime import datetime
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
         return str(cls.INDEXES_DIR / f"metadata_{snapshot_date}.json")
