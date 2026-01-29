@@ -11,6 +11,7 @@ import logging
 from mistralai import Mistral
 import faiss
 from config import Config
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,29 @@ class EventVectorizer:
         self.client = Mistral(api_key=api_key)
         self.chunks_to_metadata = {}
     
+
+    def split_text(self, input_text, chunk_size: int = 500, level=0):
+        """
+        Eclate le texte en fragments de taille <= chunksize
+        Divise sur ". " et " " en cas d'insuffisance
+        """
+        sep = (". ", ", ", " ")
+        sentences = input_text.split(sep[level])
+        output_text_list=[]
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if len(sentence)>chunk_size:
+                if level < len(sep)-1:
+                    mini_sentences =  self.split_text(sentence, chunk_size=chunk_size, level = level + 1)
+                    output_text_list.extend(mini_sentences)
+                else:
+                    logger.error(f"\n❌ Chunks splitting - FAILED")
+                    raise
+            else:
+                if sentence : output_text_list.append(sentence + sep[level] )   
+        return output_text_list
+    
+
     def chunk_events(self, events: List[Dict], chunk_size: int = 500) -> List[Dict]:
         """
         Découper les descriptions d'événements en chunks.
@@ -33,32 +57,31 @@ class EventVectorizer:
         
         for event in events:
             # Combiner tous les textes de l'événement
-            full_text = ". ".join( event[field].str.len() for field in Config.CHUNK_FIELDS)
-            # Chunking intelligent (par phrases)
-            sentences = full_text.split('. ')
+            full_text = ". ".join(event[field] for field in Config.CHUNK_FIELDS)
+            full_text = re.sub(r"<.*?>", " ", full_text)
+            # Chunking intelligent (par phrases puis mots)
+            sentences = self.split_text(full_text,chunk_size=chunk_size)
             current_chunk = ""
             
             for sentence in sentences:
-                if len(current_chunk) + len(sentence) < chunk_size:
-                    current_chunk += sentence + ". "
+                if len(current_chunk) + len(sentence) <= chunk_size:
+                    current_chunk += sentence
                 else:
                     if current_chunk:
                         chunks.append({
                             'chunk_id': chunk_id,
                             'event_id': event['uid'],
-                            'text': current_chunk.strip(),
-                            'event': event  # Garde l'événement original
+                            'text': current_chunk,
                         })
                         chunk_id += 1
-                    current_chunk = sentence + ". "
-            
+                    current_chunk = sentence
+        
             # Dernier chunk
             if current_chunk:
                 chunks.append({
                     'chunk_id': chunk_id,
                     'event_id': event['uid'],
                     'text': current_chunk.strip(),
-                    'event': event
                 })
                 chunk_id += 1
         
@@ -120,8 +143,8 @@ class EventVectorizer:
         except Exception as e:
             logger.error(f"Vectorization failed: {e}")
             raise  
-        
-          
+
+
     def create_faiss_index(self, embeddings: np.ndarray, n_vectors: int) -> faiss.IndexIVFFlat:
         """
         Créer un index Faiss optimisé.
@@ -154,34 +177,43 @@ class EventVectorizer:
         logger.info(f"Index saved to {index_path}")
         return index_path
     
-    def save_metadata(self, chunks: List[Dict], snapshot_date: str) -> str:
+    def save_metadata(self, chunks: List[Dict], events: List[Dict], snapshot_date: str) -> str:
         """
         Sauvegarder les métadonnées des chunks.
+        
+        Args:
+            chunks: List of chunks with chunk_id, event_id, text
+            events: List of events to lookup metadata by uid
+            snapshot_date: Date for path generation
         """
         from config import Config
         
         metadata_path = Config.get_metadata_path(snapshot_date)
         Path(metadata_path).parent.mkdir(parents=True, exist_ok=True)
         
-        # Format : {index: {event_id, chunk_id, text, ...}}
+        # Build event lookup by uid
+        event_lookup = {event['uid']: event for event in events}
+        
+        # Format: {index: {event_id, chunk_id, text, title, city, date, url}}
         metadata = {}
         for i, chunk in enumerate(chunks):
-            metadata[i] = {
-                'event_id': chunk['event_id'],
-                'chunk_id': chunk['chunk_id'],
-                'text': chunk['text'],
-                'title': chunk['event']['titlefr'],
-                'city': chunk['event']['locationcity'],
-                'date': chunk['event']['timings'][0]['begin'] if chunk['event']['timings'] else None,
-                'url': chunk['event']['canonicalurl']
-            }
+            event = event_lookup.get(chunk['event_id'])
+            if event:
+                metadata[i] = {
+                    'event_id': chunk['event_id'],
+                    'chunk_id': chunk['chunk_id'],
+                    'text': chunk['text'],
+                    'title': event['title_fr'],
+                    'city': event['location_city'],
+                    'date': event['timings'][0]['begin'] if event['timings'] else None,
+                    'url': event['canonical_url']
+                }
         
         with open(metadata_path, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
         
         logger.info(f"Metadata saved to {metadata_path}")
-        return metadata_path
-    
+        return metadata_path    
 
     def load_processed_events(self, processed_path: str) -> List[Dict]:
             """
