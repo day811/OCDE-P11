@@ -65,27 +65,63 @@ class EventVectorizer:
         logger.info(f"Created {len(chunks)} chunks from {len(events)} events")
         return chunks
     
-    def vectorize_chunks(self, chunks: List[Dict]) -> np.ndarray:
+    def vectorize_chunks(self, chunks: List[Dict], batch_size: int = 100) -> np.ndarray:
         """
-        Créer les embeddings pour chaque chunk via Mistral.
+        Create embeddings for each chunk via Mistral API.
+        Processes chunks in batches to respect API limits and improve reliability.
+        
+        Args:
+            chunks: List of chunk dictionaries
+            batch_size: Number of chunks per API call (default: 100)
+            
+        Returns:
+            Numpy array of embeddings (float32)
         """
         texts = [chunk['text'] for chunk in chunks]
+        total_chunks = len(texts)
         
-        logger.info(f"Vectorizing {len(texts)} chunks with {self.model_name}...")
+        logger.info(f"Vectorizing {total_chunks} chunks with {self.model_name}...")
+        logger.info(f"Batch size: {batch_size} chunks per API call")
         
-        # Appel à l'API Mistral
-        response = self.client.embeddings.create(
-            model=self.model_name,
-            inputs=texts
-        )
+        all_embeddings = []
         
-        embeddings = np.array([
-            embed.embedding for embed in response.data
-        ]).astype('float32')
+        try:
+            # Process in batches
+            num_batches = (total_chunks + batch_size - 1) // batch_size
+            
+            for batch_idx in range(num_batches):
+                start_idx = batch_idx * batch_size
+                end_idx = min(start_idx + batch_size, total_chunks)
+                batch_texts = texts[start_idx:end_idx]
+                
+                logger.info(f"Batch {batch_idx + 1}/{num_batches}: Vectorizing chunks {start_idx}-{end_idx}...")
+                
+                # Call Mistral API for this batch
+                response = self.client.embeddings.create(
+                    model=self.model_name,
+                    inputs=batch_texts
+                )
+                
+                # Extract embeddings from response
+                batch_embeddings = np.array([
+                    embed.embedding for embed in response.data
+                ]).astype('float32')
+                
+                all_embeddings.append(batch_embeddings)
+                
+                logger.info(f"  ✓ Batch {batch_idx + 1}: {len(batch_embeddings)} embeddings created")
+            
+            # Concatenate all batches
+            embeddings = np.vstack(all_embeddings)
+            
+            logger.info(f"✅ Vectorization complete: shape={embeddings.shape}, dtype={embeddings.dtype}")
+            return embeddings
         
-        logger.info(f"Embeddings shape: {embeddings.shape}")
-        return embeddings
-    
+        except Exception as e:
+            logger.error(f"Vectorization failed: {e}")
+            raise  
+        
+          
     def create_faiss_index(self, embeddings: np.ndarray, n_vectors: int) -> faiss.IndexIVFFlat:
         """
         Créer un index Faiss optimisé.
