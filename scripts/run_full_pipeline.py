@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import Config
 from src.data_fetcher import fetch_events_snapshot
 from src.preprocessing import preprocess_snapshot
+from src.vectorization import EventVectorizer
 
 
 class PipelineOrchestrator:
@@ -102,6 +103,42 @@ class PipelineOrchestrator:
             print(f"\n❌ Preprocessing failed: {str(e)}\n")
             return False
     
+    def _step3_vectorize_and_index(self) -> bool:
+        """NOUVEAU : Vectoriser + Indexer dans Faiss"""
+        print("\n[STEP 3] Vectorizing and indexing with Faiss...")
+        try:
+            vectorizer = EventVectorizer(
+                model_name="mistral-embed",
+                api_key=os.getenv("MISTRAL_API_KEY")
+            )
+            
+            # Charger les données préprocessées
+            processed_path = Config.get_processed_snapshot_path(
+                self.snapshot_date
+            )
+            events = vectorizer.load_processed_events(processed_path)
+            
+            # Chunking
+            chunks = vectorizer.chunk_events(events, chunk_size=500)
+            
+            # Vectorisation
+            embeddings = vectorizer.vectorize_chunks(chunks)
+            
+            # Indexation Faiss
+            index = vectorizer.create_faiss_index(embeddings)
+            
+            # Sauvegarde
+            vectorizer.save_index(index, self.snapshot_date)
+            vectorizer.save_metadata(chunks, self.snapshot_date)
+            
+            print(f"✅ Indexed {len(chunks)} chunks in Faiss")
+            return True
+        
+        except Exception as e:
+            print(f"❌ Vectorization failed: {e}")
+            return False
+
+
     def print_summary(self, success: bool) -> int:
         """Print execution summary"""
         print("\n" + "="*70)
