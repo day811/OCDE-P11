@@ -10,6 +10,7 @@ from typing import List, Dict, Tuple
 import logging
 from mistralai import Mistral
 import faiss
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +33,7 @@ class EventVectorizer:
         
         for event in events:
             # Combiner tous les textes de l'événement
-            full_text = f"{event['titlefr']}. {event['descriptionfr']}. {event['conditionsfr']}"
-            
+            full_text = ". ".join( event[field].str.len() for field in Config.CHUNK_FIELDS)
             # Chunking intelligent (par phrases)
             sentences = full_text.split('. ')
             current_chunk = ""
@@ -86,7 +86,7 @@ class EventVectorizer:
         logger.info(f"Embeddings shape: {embeddings.shape}")
         return embeddings
     
-    def create_faiss_index(self, embeddings: np.ndarray) -> faiss.IndexIVFFlat:
+    def create_faiss_index(self, embeddings: np.ndarray, n_vectors: int) -> faiss.IndexIVFFlat:
         """
         Créer un index Faiss optimisé.
         """
@@ -99,8 +99,8 @@ class EventVectorizer:
         index = faiss.IndexIVFFlat(quantizer, dimension, nlist)
         
         logger.info(f"Training index with {len(embeddings)} vectors...")
-        index.train(embeddings)
-        index.add(embeddings)
+        index.train(n_vectors, embeddings)
+        index.add(n_vectors,embeddings)
         
         logger.info(f"✅ Faiss index created (nlist={nlist}, vectors={len(embeddings)})")
         return index
@@ -146,7 +146,7 @@ class EventVectorizer:
         logger.info(f"Metadata saved to {metadata_path}")
         return metadata_path
     
-    
+
     def load_processed_events(self, processed_path: str) -> List[Dict]:
             """
             Load processed events from JSON file.
@@ -164,3 +164,43 @@ class EventVectorizer:
             
             logger.info(f"Loaded {len(events)} events")
             return events
+    
+    def run_full_vectorization_pipeline(self, processed_path: str, snapshot_date: str, chunk_size: int = 500) -> Tuple[str, str]:
+        """Execute complete vectorization pipeline: Load → Chunk → Vectorize → Index → Save"""
+        logger.info(f"\n{'='*70}")
+        logger.info("VECTORIZATION PIPELINE - START")
+        logger.info(f"{'='*70}")
+        
+        try:
+            logger.info("\n[3a] Loading processed events...")
+            events = self.load_processed_events(processed_path)
+            
+            logger.info(f"\n[3b] Chunking events (chunk_size={chunk_size})...")
+            chunks = self.chunk_events(events, chunk_size=chunk_size)
+            
+            logger.info(f"\n[3c] Vectorizing {len(chunks)} chunks...")
+            embeddings = self.vectorize_chunks(chunks)
+            
+            logger.info(f"\n[3d] Creating Faiss index...")
+            index = self.create_faiss_index(embeddings, len(chunks))
+            
+            logger.info(f"\n[3e] Saving Faiss index...")
+            index_path = self.save_index(index, snapshot_date)
+            
+            logger.info(f"\n[3f] Saving metadata...")
+            metadata_path = self.save_metadata(chunks, snapshot_date)
+            
+            logger.info(f"\n{'='*70}")
+            logger.info("✅ VECTORIZATION PIPELINE - COMPLETE")
+            logger.info(f"{'='*70}")
+            logger.info(f"Index: {index_path}")
+            logger.info(f"Metadata: {metadata_path}")
+            
+            return index_path, metadata_path
+        
+        except Exception as e:
+            logger.error(f"\n❌ VECTORIZATION PIPELINE - FAILED")
+            logger.error(f"Error: {e}")
+            raise
+            print(f"✅ Indexed {len(chunks)} chunks in Faiss")
+

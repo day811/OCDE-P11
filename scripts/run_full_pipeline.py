@@ -40,7 +40,7 @@ class PipelineOrchestrator:
             self.snapshot_date = snapshot_date
         
         self.raw_snapshot_path = None
-        self.processed_path = None
+        self.processed_path = ""
     
     def print_header(self) -> None:
         """Print pipeline header"""
@@ -103,37 +103,20 @@ class PipelineOrchestrator:
             print(f"\n❌ Preprocessing failed: {str(e)}\n")
             return False
     
-    def _step3_vectorize_and_index(self) -> bool:
+    def step3_vectorize_and_index(self) -> bool:
         """NOUVEAU : Vectoriser + Indexer dans Faiss"""
         print("\n[STEP 3] Vectorizing and indexing with Faiss...")
         try:
             vectorizer = EventVectorizer(
                 model_name="mistral-embed",
-                api_key=os.getenv("MISTRAL_API_KEY")
+                api_key=Config.MISTRAL_API_KEY
             )
-            
-            # Charger les données préprocessées
-            processed_path = Config.get_processed_snapshot_path(
-                self.snapshot_date
+            index_path, metadata_path = vectorizer.run_full_vectorization_pipeline(
+                processed_path= self.processed_path,
+                snapshot_date=self.snapshot_date,
+                chunk_size=500
             )
-            events = vectorizer.load_processed_events(processed_path)
-            
-            # Chunking
-            chunks = vectorizer.chunk_events(events, chunk_size=500)
-            
-            # Vectorisation
-            embeddings = vectorizer.vectorize_chunks(chunks)
-            
-            # Indexation Faiss
-            index = vectorizer.create_faiss_index(embeddings)
-            
-            # Sauvegarde
-            vectorizer.save_index(index, self.snapshot_date)
-            vectorizer.save_metadata(chunks, self.snapshot_date)
-            
-            print(f"✅ Indexed {len(chunks)} chunks in Faiss")
-            return True
-        
+            return True        
         except Exception as e:
             print(f"❌ Vectorization failed: {e}")
             return False
@@ -244,6 +227,12 @@ Examples:
         help="Number of pages to collect"
     )
 
+    parser.add_argument(
+        '--vectorize-only',
+        action='store_true',
+        help="Run only Step 3 (vectorization & indexing) using an existing processed snapshot"
+    )
+
     args = parser.parse_args()
     
     # Handle list-indexes command
@@ -259,7 +248,24 @@ Examples:
         snapshot_date=args.snapshot_date,
     )
     
-    return orchestrator.run()
+    # Handle vectorize-only command: run vectorization only using existing processed snapshot
+    if args.vectorize_only:
+        # On a besoin d'une date de snapshot explicite
+        if not args.snapshot_date:
+            print("❌ --vectorize-only requires --snapshot-date YYYY-MM-DD")
+            return 1
+        
+        # Construire le chemin du snapshot pré‑traité
+        processed_path = Config.get_processed_snapshot_path(args.snapshot_date)
+        if not Path(processed_path).exists():
+            print(f"❌ Processed snapshot not found: {processed_path}")
+            print(f"   Run steps 1 & 2 first for this date.")
+            return 1
+        orchestrator.processed_path = processed_path
+        ok = orchestrator.step3_vectorize_and_index()
+        return orchestrator.print_summary(ok)
+    else:
+        return orchestrator.run()
 
 
 if __name__ == "__main__":
