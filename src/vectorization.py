@@ -12,6 +12,7 @@ from mistralai import Mistral
 import faiss
 from config import Config
 import re
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class EventVectorizer:
                     output_text_list.extend(mini_sentences)
                 else:
                     logger.error(f"\n❌ Chunks splitting - FAILED")
-                    raise
+                    raise ValueError(f"Failed to chunk text of length {len(sentence)} with all separators exhausted")
             else:
                 if sentence : output_text_list.append(sentence + sep[level] )   
         return output_text_list
@@ -58,7 +59,10 @@ class EventVectorizer:
         for event in events:
             # Combiner tous les textes de l'événement
             full_text = ". ".join(event[field] for field in Config.CHUNK_FIELDS)
+
+            #retirer les balises html
             full_text = re.sub(r"<.*?>", " ", full_text)
+
             # Chunking intelligent (par phrases puis mots)
             sentences = self.split_text(full_text,chunk_size=chunk_size)
             current_chunk = ""
@@ -81,7 +85,7 @@ class EventVectorizer:
                 chunks.append({
                     'chunk_id': chunk_id,
                     'event_id': event['uid'],
-                    'text': current_chunk.strip(),
+                    'text': current_chunk,
                 })
                 chunk_id += 1
         
@@ -133,6 +137,8 @@ class EventVectorizer:
                 all_embeddings.append(batch_embeddings)
                 
                 logger.info(f"  ✓ Batch {batch_idx + 1}: {len(batch_embeddings)} embeddings created")
+
+                time.sleep(0.5)
             
             # Concatenate all batches
             embeddings = np.vstack(all_embeddings)
@@ -152,14 +158,14 @@ class EventVectorizer:
         dimension = embeddings.shape[1]  # 1024 pour Mistral
         
         # IVF : optimisé pour medium-sized datasets
-        nlist = min(100, max(10, len(embeddings) // 100))
+        nlist = min(100, max(10, n_vectors // 100))
         
         quantizer = faiss.IndexFlatL2(dimension)
         index = faiss.IndexIVFFlat(quantizer, dimension, nlist)
         
         logger.info(f"Training index with {len(embeddings)} vectors...")
-        index.train(n_vectors, embeddings)
-        index.add(n_vectors,embeddings)
+        index.train(embeddings) # type: ignore
+        index.add(embeddings) # type: ignore
         
         logger.info(f"✅ Faiss index created (nlist={nlist}, vectors={len(embeddings)})")
         return index
@@ -203,10 +209,10 @@ class EventVectorizer:
                     'event_id': chunk['event_id'],
                     'chunk_id': chunk['chunk_id'],
                     'text': chunk['text'],
-                    'title': event['title_fr'],
-                    'city': event['location_city'],
-                    'date': event['timings'][0]['begin'] if event['timings'] else None,
-                    'url': event['canonical_url']
+                    'title': event[Config.TITLE],
+                    'city': event[Config.LOC_CITY],
+                    'dates': event[Config.TIMINGS],
+                    'url': event[Config.URL]
                 }
         
         with open(metadata_path, 'w', encoding='utf-8') as f:
@@ -256,7 +262,7 @@ class EventVectorizer:
             index_path = self.save_index(index, snapshot_date)
             
             logger.info(f"\n[3f] Saving metadata...")
-            metadata_path = self.save_metadata(chunks, snapshot_date)
+            metadata_path = self.save_metadata(chunks, events, snapshot_date)
             
             logger.info(f"\n{'='*70}")
             logger.info("✅ VECTORIZATION PIPELINE - COMPLETE")
