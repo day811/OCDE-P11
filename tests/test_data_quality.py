@@ -34,7 +34,7 @@ class TestDataQuality(unittest.TestCase):
     def setUpClass(cls):
         """Load processed data once for all tests"""
         # Use development snapshot
-        snapshot_date = Config.DEVELOPMENT_SNAPSHOT_DATE
+        snapshot_date = Config.DEV_SNAPSHOT_DATE
         processed_path = Config.get_processed_snapshot_path(snapshot_date)
         
         if not Path(processed_path).exists():
@@ -295,7 +295,7 @@ class TestDataQuality(unittest.TestCase):
         print("\n" + "="*70)
         print("DATA QUALITY SUMMARY")
         print("="*70)
-        print(f"Tested file date:     {Config.DEVELOPMENT_SNAPSHOT_DATE}")
+        print(f"Tested file date:     {Config.DEV_SNAPSHOT_DATE}")
         print("="*70)
         print(f"Total events:         {len(self.events)}")
         
@@ -338,7 +338,7 @@ class TestPreprocessingPipeline(unittest.TestCase):
     
     def test_preprocessor_initialization(self):
         """Verify preprocessor can be initialized"""
-        snapshot_date = Config.DEVELOPMENT_SNAPSHOT_DATE
+        snapshot_date = Config.DEV_SNAPSHOT_DATE
         raw_path = Config.get_raw_snapshot_path(snapshot_date)
         
         if not Path(raw_path).exists():
@@ -350,7 +350,7 @@ class TestPreprocessingPipeline(unittest.TestCase):
     
     def test_pipeline_produces_output(self):
         """Verify preprocessing pipeline produces output file"""
-        snapshot_date = Config.DEVELOPMENT_SNAPSHOT_DATE
+        snapshot_date = Config.DEV_SNAPSHOT_DATE
         processed_path = Config.get_processed_snapshot_path(snapshot_date)
         
         self.assertTrue(
@@ -362,7 +362,7 @@ class TestPreprocessingPipeline(unittest.TestCase):
     
     def test_processed_file_is_valid_json(self):
         """Verify processed data is valid JSON"""
-        snapshot_date = Config.DEVELOPMENT_SNAPSHOT_DATE
+        snapshot_date = Config.DEV_SNAPSHOT_DATE
         processed_path = Config.get_processed_snapshot_path(snapshot_date)
         
         try:
