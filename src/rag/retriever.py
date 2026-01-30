@@ -27,7 +27,7 @@ class RAGRetriever:
         query_vector = np.array([query_embedding], dtype=np.float32)
         
         # Search Faiss
-        search_k = k * 4
+        search_k = k * 10
         distances, indices = self.faiss_index.search(query_vector, search_k)
         
         # Build results with distances
@@ -75,19 +75,21 @@ class RAGRetriever:
         
         return filtered
     
+
     @staticmethod
     def _matches_date(chunk: Dict, target_date: datetime, tolerance_days: int = 0) -> bool:
         """Check if chunk date matches target date"""
         try:
-            chunk_date_str = chunk.get('date', '')
-            if not chunk_date_str:
-                return False
+            timings = chunk.get('dates', '')
             
-            chunk_date = datetime.fromisoformat(chunk_date_str).date()
-            target = target_date.date()
-            
-            delta = abs((chunk_date - target).days)
-            return delta <= tolerance_days
+            for timing in timings:
+                begin = timing['begin']
+                chunk_date = datetime.fromisoformat(begin).date()
+                target = target_date.date()
+                delta = abs((chunk_date - target).days)
+                if delta <= tolerance_days :
+                    return True
+            return False
         except:
             return False
     
