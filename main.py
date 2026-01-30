@@ -5,6 +5,7 @@ from datetime import datetime
 from src.rag.rag_engine import RAGEngine
 from src.api.app import app
 import uvicorn
+from config import Config
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,7 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def search_cli(question: str, top_k: int = 5, snapshot_date: str = None):
+def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
     """CLI search command"""
     try:
         engine = RAGEngine(snapshot_date=snapshot_date)
@@ -88,7 +89,7 @@ def main():
     # Search command
     search_parser = subparsers.add_parser("search", help="Search for events")
     search_parser.add_argument("-q", "--question", required=True, help="Question")
-    search_parser.add_argument("-d", "--date", help="Snapshot date (YYYY-MM-DD)")
+    search_parser.add_argument("-d", "--date", default= Config.DEV_SNAPSHOT_DATE, help="Snapshot date (YYYY-MM-DD)")
     search_parser.add_argument("-k", "--top-k", type=int, default=5, help="Top K results")
     
     # API command
