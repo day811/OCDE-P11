@@ -6,7 +6,7 @@
     "configurations": [
 
         {
-            "name": "Python Debugger: Fetch data",
+            "name": "Fetch data",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/scripts/run_fetch_pipeline.py",
@@ -15,6 +15,21 @@
                 "--max-pages",
                 "100"
             ],
-        }
+        },
+        {
+            "name": "Search",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "search",
+                "--question",
+                "Où peut on voir une exposition ce soir à Perpignan ?",
+                "--date",
+                "2026-01-29"
+            ],
+        },
+
     ]
 }
