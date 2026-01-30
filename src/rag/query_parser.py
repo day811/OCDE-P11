@@ -8,8 +8,8 @@ class QueryParser:
     
     CITIES = [
         'toulouse', 'montpellier', 'nîmes', 'perpignan', 'albi',
-        'rodez', 'cahors', 'figeac', 'auch', 'tarbes',
-        'pau', 'biarritz', 'bayonne'
+        'rodez', 'cahors', 'figeac', 'auch', 'lunel',
+        'sete', 'millau', 'narbonne', "carcassonne", "foix", "montauban", 
     ]
     
     @staticmethod
@@ -51,7 +51,7 @@ class QueryParser:
         query_lower = query.lower()
         
         for city in QueryParser.CITIES:
-            if re.search(rf'\b(à|in|de|from)\s+{city}\b', query_lower):
+            if re.search(rf'\b(à|dans|de|près)\s+{city}\b', query_lower):
                 return city.capitalize()
             if re.search(rf'\b{city}\b', query_lower):
                 return city.capitalize()
