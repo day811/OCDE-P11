@@ -38,7 +38,7 @@ class Config:
     
     # ============= SNAPSHOT CONFIGURATION =============
     # FROZEN snapshot for reproducible testing (Phase 2-5)
-    DEVELOPMENT_SNAPSHOT_DATE = os.getenv("DEV_SNAPSHOT_DATE","2026-01-29")
+    DEV_SNAPSHOT_DATE = os.getenv("DEV_SNAPSHOT_DATE","2026-01-29")
     
     # Current execution environment
     ENVIRONMENT = Environment[os.getenv("RAG_ENVIRONMENT", "development").upper()]
@@ -105,16 +105,16 @@ class Config:
         """
         if cls.ENVIRONMENT == Environment.DEVELOPMENT:
             # Always use FROZEN development snapshot
-            index_path = cls.INDEXES_DIR / f"faiss_index_{cls.DEVELOPMENT_SNAPSHOT_DATE}.bin"
+            index_path = cls.INDEXES_DIR / f"faiss_index_{cls.DEV_SNAPSHOT_DATE}.bin"
             
             if not index_path.exists():
                 raise FileNotFoundError(
                     f"\n❌ Development index not found: {index_path}\n"
                     f"Run: python scripts/run_full_pipeline.py "
-                    f"--snapshot-date {cls.DEVELOPMENT_SNAPSHOT_DATE}\n"
+                    f"--snapshot-date {cls.DEV_SNAPSHOT_DATE}\n"
                 )
             
-            print(f"🔒 [DEVELOPMENT] Loading index from {cls.DEVELOPMENT_SNAPSHOT_DATE}")
+            print(f"🔒 [DEVELOPMENT] Loading index from {cls.DEV_SNAPSHOT_DATE}")
             return str(index_path)
         
         elif cls.ENVIRONMENT == Environment.DEMO:
@@ -171,7 +171,7 @@ class Config:
             
             # Check if this is development or latest
             markers = []
-            if snapshot_date == cls.DEVELOPMENT_SNAPSHOT_DATE:
+            if snapshot_date == cls.DEV_SNAPSHOT_DATE:
                 markers.append("🔒 DEVELOPMENT (FROZEN)")
             if idx == len(index_files):
                 markers.append("⭐ LATEST")
@@ -222,7 +222,7 @@ class Config:
         print(f"Environment:          {cls.ENVIRONMENT.value.upper()}")
         print(f"Region:               {cls.REGION}")
         print(f"Historical period:    {cls.DAYS_BACK} days")
-        print(f"Dev snapshot date:    {cls.DEVELOPMENT_SNAPSHOT_DATE}")
+        print(f"Dev snapshot date:    {cls.DEV_SNAPSHOT_DATE}")
         print(f"Data directory:       {cls.DATA_DIR}")
         print(f"Indexes directory:    {cls.INDEXES_DIR}")
         print("="*70 + "\n")

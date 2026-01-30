@@ -134,7 +134,7 @@ class PipelineOrchestrator:
             print(f"Processed:      {self.processed_path}")
             
             # Check if this is development snapshot
-            if self.snapshot_date == Config.DEVELOPMENT_SNAPSHOT_DATE:
+            if self.snapshot_date == Config.DEV_SNAPSHOT_DATE:
                 print(f"\n🔒 This is your DEVELOPMENT snapshot - FROZEN for testing")
             else:
                 print(f"\n⭐ This is a LIVE snapshot - will be updated on next pipeline run")
