@@ -10,6 +10,8 @@ from datetime import datetime
 from src.rag.query_parser import QueryParser
 from src.rag.retriever import RAGRetriever
 from src.rag.context_builder import ContextBuilder
+from config import Config
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,6 @@ class RAGEngine:
     
     def __init__(self, snapshot_date: Optional[str] = None, environment: str = 'prod'):
         """Initialize RAG Engine"""
-        from config import Config
         
         self.snapshot_date = snapshot_date or datetime.now().strftime("%Y-%m-%d")
         self.environment = environment
@@ -42,14 +43,12 @@ class RAGEngine:
         self.context_builder = ContextBuilder
         
         # Initialize Mistral LLM
-        from mistralai.client import MistralClient
-        from config import Config
-        self.llm = MistralClient(api_key=Config.MISTRAL_API_KEY)
+        from mistralai import Mistral, UserMessage
+        self.llm = Mistral(api_key=Config.MISTRAL_API_KEY)
     
     def _embed_query(self, query_text: str):
         """Embed query using Mistral"""
         from src.vector.vectorization import EventVectorizer
-        from config import Config
         
         vectorizer = EventVectorizer(
             model_name="mistral-embed",
@@ -133,7 +132,7 @@ Basé sur le contexte, fournis une réponse concise recommandant les événement
     def _generate_answer(self, prompt: str) -> str:
         """Generate answer using LLM"""
         try:
-            message = self.llm.chat(
+            llm_response = self.llm.chat.complete(
                 model="mistral-small",
                 messages=[
                     {
@@ -142,7 +141,7 @@ Basé sur le contexte, fournis une réponse concise recommandant les événement
                     }
                 ]
             )
-            return message.choices[0].message.content
+            return llm_response.choices[0].message.content
         except Exception as e:
             logger.error(f"LLM generation error: {e}")
             return "Désolé, je n'ai pas pu générer une réponse."
