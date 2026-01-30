@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Events Search - Événements en Occitanie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #f39c12;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1a3a52 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            padding: 40px 30px;
+            background: var(--light-bg);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+        }
+
+        .search-btn {
+            padding: 12px 30px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #1a3a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .search-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .results-section {
+            padding: 40px 30px;
+            min-height: 200px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid var(--light-bg);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffe6e6;
+            color: var(--danger-color);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--danger-color);
+            margin-bottom: 20px;
+        }
+
+        .answer-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .answer-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .answer-text {
+            line-height: 1.6;
+            font-size: 1em;
+            color: var(--text-color);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .constraints-box {
+            background: #e8f4f8;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            border-left: 4px solid #3498db;
+        }
+
+        .constraints-box strong {
+            color: var(--primary-color);
+        }
+
+        .sources-section {
+            margin-top: 30px;
+        }
+
+        .sources-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .source-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .source-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.1);
+            transform: translateX(5px);
+        }
+
+        .source-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .source-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .source-info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .source-info-label {
+            font-weight: 600;
+            color: #7f8c8d;
+        }
+
+        .source-url {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .source-url:hover {
+            background: #1a3a52;
+        }
+
+        .relevance-score {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .examples-section {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .examples-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .example-btn {
+            display: inline-block;
+            background: white;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .example-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .stats {
+            text-align: right;
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 15px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .no-results svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .source-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎭 RAG Events Search</h1>
+            <p>Trouvez les meilleurs événements en Occitanie</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <!-- Examples -->
+            <div class="examples-section">
+                <div class="examples-title">💡 Exemples de recherche :</div>
+                <div id="examplesContainer" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+
+            <!-- Search Form -->
+            <form id="searchForm" onsubmit="handleSearch(event)">
+                <div class="search-form">
+                    <input
+                        type="text"
+                        id="questionInput"
+                        class="search-input"
+                        placeholder="Posez votre question (ex: 'Quels événements ce soir à Toulouse ?')"
+                        required
+                    >
+                    <button type="submit" id="searchBtn" class="search-btn">
+                        🔍 Chercher
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="dateInput">📅 Date du snapshot (optionnel)</label>
+                        <input type="date" id="dateInput">
+                    </div>
+                    <div class="filter-group">
+                        <label for="topKInput">📊 Nombre de résultats</label>
+                        <select id="topKInput">
+                            <option value="3">3 résultats</option>
+                            <option value="5" selected>5 résultats</option>
+                            <option value="10">10 résultats</option>
+                            <option value="20">20 résultats</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsContainer" style="display: none;">
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+
+        // Load examples on startup
+        async function loadExamples() {
+            try {
+                const response = await fetch(`${API_BASE}/examples`);
+                const data = await response.json();
+                const container = document.getElementById('examplesContainer');
+
+                data.examples.forEach(example => {
+                    const btn = document.createElement('button');
+                    btn.className = 'example-btn';
+                    btn.type = 'button';
+                    btn.textContent = example.description;
+                    btn.title = example.question;
+                    btn.onclick = () => {
+                        document.getElementById('questionInput').value = example.question;
+                    };
+                    container.appendChild(btn);
+                });
+            } catch (error) {
+                console.error('Failed to load examples:', error);
+            }
+        }
+
+        // Handle search
+        async function handleSearch(event) {
+            event.preventDefault();
+
+            const question = document.getElementById('questionInput').value.trim();
+            const date = document.getElementById('dateInput').value;
+            const topK = document.getElementById('topKInput').value;
+
+            if (!question) {
+                showError('Veuillez entrer une question');
+                return;
+            }
+
+            // Show loading state
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsContent = document.getElementById('resultsContent');
+            resultsContainer.style.display = 'block';
+            resultsContent.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Recherche en cours...</p>
+                </div>
+            `;
+
+            try {
+                const payload = {
+                    question: question,
+                    top_k: parseInt(topK),
+                    snapshot_date: date || null
+                };
+
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erreur de recherche');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Display results
+        function displayResults(data) {
+            const resultsContent = document.getElementById('resultsContent');
+            let html = '';
+
+            // Constraints
+            if (data.constraints.date || data.constraints.city) {
+                html += '<div class="constraints-box">';
+                if (data.constraints.date) {
+                    html += `<strong>📅 Date:</strong> ${formatDate(data.constraints.date)}<br>`;
+                }
+                if (data.constraints.city) {
+                    html += `<strong>🏙️ Ville:</strong> ${data.constraints.city}`;
+                }
+                html += '</div>';
+            }
+
+            // Answer
+            html += `
+                <div class="answer-box">
+                    <h3>💬 Réponse</h3>
+                    <div class="answer-text">${escapeHtml(data.answer)}</div>
+                </div>
+            `;
+
+            // Sources
+            if (data.sources && data.sources.length > 0) {
+                html += '<div class="sources-section">';
+                html += `<div class="sources-title">📍 ${data.sources.length} événement(s) trouvé(s)</div>`;
+
+                data.sources.forEach(source => {
+                    html += `
+                        <div class="source-card">
+                            <div class="source-title">
+                                ${escapeHtml(source.title)}
+                                ${source.distance ? `<span class="relevance-score">${(source.distance * 100).toFixed(0)}%</span>` : ''}
+                            </div>
+                            <div class="source-info">
+                                <div class="source-info-item">
+                                    <span class="source-info-label">🏙️ Ville:</span>
+                                    <span>${escapeHtml(source.city)}</span>
+                                </div>
+                                <div class="source-info-item">
+                                    <span class="source-info-label">📅 Date:</span>
+                                    <span>${formatDate(source.date)}</span>
+                                </div>
+                            </div>
+                            <a href="${escapeHtml(source.url)}" target="_blank" class="source-url">
+                                Voir les détails →
+                            </a>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            } else {
+                html += `
+                    <div class="no-results">
+                        <h3>Aucun résultat trouvé</h3>
+                        <p>Essayez avec d'autres critères ou une question différente</p>
+                    </div>
+                `;
+            }
+
+            // Stats
+            html += `<div class="stats">⏱️ Recherche effectuée en ${data.execution_time.toFixed(3)}s</div>`;
+
+            document.getElementById('resultsContent').innerHTML = html;
+        }
+
+        // Show error
+        function showError(message) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsContent = document.getElementById('resultsContent');
+            resultsContainer.style.display = 'block';
+            resultsContent.innerHTML = `
+                <div class="error-message">
+                    <strong>⚠️ Erreur:</strong> ${escapeHtml(message)}
+                </div>
+            `;
+        }
+
+        // Utility functions
+        function formatDate(dateStr) {
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('fr-FR', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize
+        loadExamples();
+        
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateInput').value = today;
+    </script>
+</body>
+</html>
