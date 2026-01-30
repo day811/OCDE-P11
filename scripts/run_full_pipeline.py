@@ -13,9 +13,9 @@ import argparse
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import Config
-from src.data_fetcher import fetch_events_snapshot
-from src.preprocessing import preprocess_snapshot
-from src.vectorization import EventVectorizer
+from src.vector.data_fetcher import fetch_events_snapshot
+from src.vector.preprocessing import preprocess_snapshot
+from src.vector.vectorization import EventVectorizer
 
 
 class PipelineOrchestrator:
