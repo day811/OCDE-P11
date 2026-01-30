@@ -24,7 +24,7 @@ from datetime import datetime, timedelta, timezone
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import Config
-from src.preprocessing import EventPreprocessor
+from src.vector.preprocessing import EventPreprocessor
 
 
 class TestDataQuality(unittest.TestCase):

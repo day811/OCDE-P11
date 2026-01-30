@@ -27,7 +27,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import Config
-from src.vectorization import EventVectorizer
+from src.vector.vectorization import EventVectorizer
 
 
 class TestChunking(unittest.TestCase):
