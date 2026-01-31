@@ -27,7 +27,7 @@ class RAGRetriever:
         query_vector = np.array([query_embedding], dtype=np.float32)
         
         # Search Faiss
-        search_k = k * 10
+        search_k = k * 50
         distances, indices = self.faiss_index.search(query_vector, search_k)
         
         # Build results with distances
