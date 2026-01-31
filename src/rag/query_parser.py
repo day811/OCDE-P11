@@ -11,12 +11,22 @@ class QueryParser:
         'rodez', 'cahors', 'figeac', 'auch', 'lunel',
         'sete', 'millau', 'narbonne', "carcassonne", "foix", "montauban", 
     ]
+    DEPARTMENTS = ['ariege', 'aude', 'aveyron', 'gard', 'haute-garonne', 'herault', 'lot',
+                   'lozere', 'hautes-pyrenees', 'pyrenees-orientales', 'tarn', 'tarn-et-garonne']
     
     @staticmethod
     def parse_date(query: str) -> Optional[datetime]:
         """Extract date from query"""
         query_lower = query.lower()
         
+        #On a precise date
+        match = re.search(r'\ble\s+(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[0,1,2])[\/\-\s](?:20|)([234][0-9]|)', query_lower +" ")
+        if match and match.lastindex >= 2:
+            dd = int(match[1])
+            mm = int(match[2])
+            aa = int("20" + match[3] if match[3] else datetime.now().strftime('%y'))
+            return datetime(aa,mm,dd)
+
         # Today/tonight
         if re.search(r'\b(ce soir|aujourd\'hui|today|ce jour|ce matin|cet après-midi)\b', query_lower):
             return datetime.today()
@@ -59,9 +69,23 @@ class QueryParser:
         return None
     
     @staticmethod
+    def parse_department(query: str) -> Optional[str]:
+        """Extract department from query"""
+        query_lower = query.lower()
+        
+        for city in QueryParser.DEPARTMENTS:
+            if re.search(rf'\b(à|dans|de|près)\s+{city}\b', query_lower):
+                return city.capitalize()
+            if re.search(rf'\b{city}\b', query_lower):
+                return city.capitalize()
+        
+        return None
+
+    @staticmethod
     def parse_constraints(query: str) -> Dict:
         """Parse date and city from query"""
         return {
             'date': QueryParser.parse_date(query),
-            'city': QueryParser.parse_city(query)
+            'city': QueryParser.parse_city(query),
+            'dept': QueryParser.parse_department(query)
         }
