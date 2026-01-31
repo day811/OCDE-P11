@@ -213,7 +213,7 @@ class EventVectorizer:
                     'city': event[Config.LOC_CITY],
                     'address': event[Config.LOC_ADDRESS],
                     'dept': event[Config.LOC_DEPT],
-                    'begin': event[Config.TIMINGS][0]['begin'],
+                    'begin': event[Config.FIRST_DATE],
                     'dates': event[Config.TIMINGS],
                     'url': event[Config.URL]
                 }
