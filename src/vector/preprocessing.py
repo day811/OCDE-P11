@@ -104,6 +104,7 @@ class EventPreprocessor:
                         Config.DESC: str(row.get(Config.DESC, "")).strip(),
                         Config.LONG_DESC: str(row.get(Config.LONG_DESC, "")).strip(),
                         Config.TIMINGS: timings,
+                        Config.FIRST_DATE: timings[0]['begin'] if timings[0] else None,
                         Config.LOC_NAME: row.get(Config.LOC_NAME, ""),
                         Config.LOC_CITY: row.get(Config.LOC_CITY, ""),
                         Config.LOC_DEPT: row.get(Config.LOC_DEPT, ""),
