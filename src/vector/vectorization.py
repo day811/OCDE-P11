@@ -58,7 +58,7 @@ class EventVectorizer:
         
         for event in events:
             # Combiner tous les textes de l'événement
-            full_text = ". ".join(event[field] for field in Config.CHUNK_FIELDS)
+            full_text = ". ".join(event[field] for field in Config.CHUNK_FIELDS if field)
 
             #retirer les balises html
             full_text = re.sub(r"<.*?>", " ", full_text)
@@ -211,6 +211,9 @@ class EventVectorizer:
                     'text': chunk['text'],
                     'title': event[Config.TITLE],
                     'city': event[Config.LOC_CITY],
+                    'address': event[Config.LOC_ADDRESS],
+                    'dept': event[Config.LOC_DEPT],
+                    'begin': event[Config.TIMINGS][0]['begin'],
                     'dates': event[Config.TIMINGS],
                     'url': event[Config.URL]
                 }
