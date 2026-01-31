@@ -15,31 +15,31 @@ class QueryParser:
                    'lozere', 'hautes-pyrenees', 'pyrenees-orientales', 'tarn', 'tarn-et-garonne']
     
     @staticmethod
-    def parse_date(query: str) -> Optional[datetime]:
+    def parse_date(query: str) -> Optional[tuple[datetime,int]]:
         """Extract date from query"""
         query_lower = query.lower()
         
         #On a precise date
         match = re.search(r'\ble\s+(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[0,1,2])[\/\-\s](?:20|)([234][0-9]|)', query_lower +" ")
-        if match and match.lastindex >= 2:
+        if match and match.lastindex >= 2: # pyright: ignore[reportOptionalOperand]
             dd = int(match[1])
             mm = int(match[2])
             aa = int("20" + match[3] if match[3] else datetime.now().strftime('%y'))
-            return datetime(aa,mm,dd)
+            return (datetime(aa,mm,dd),0)
 
         # Today/tonight
         if re.search(r'\b(ce soir|aujourd\'hui|today|ce jour|ce matin|cet après-midi)\b', query_lower):
-            return datetime.today()
+            return (datetime.today(),0)
         
         # Tomorrow
         if re.search(r'\b(demain|tomorrow)\b', query_lower):
-            return datetime.today() + timedelta(days=1)
+            return (datetime.today(), 1)
         
         # Relative days: "dans X jours"
         match = re.search(r'\bdans\s+(\d+)\s+(jour|jours|day|days)\b', query_lower)
         if match:
             days = int(match.group(1))
-            return datetime.today() + timedelta(days=days)
+            return (datetime.today(), days)
         
         # This weekend
         if re.search(r'\b(ce weekend|ce week-end|this weekend)\b', query_lower):
@@ -47,11 +47,11 @@ class QueryParser:
             days_until_saturday = (5 - today.weekday()) % 7
             if days_until_saturday == 0:
                 days_until_saturday = 7
-            return today + timedelta(days=days_until_saturday)
+            return (today ,days_until_saturday)
         
         # Next week
         if re.search(r'\b(semaine prochaine|next week)\b', query_lower):
-            return datetime.today() + timedelta(weeks=1)
+            return (datetime.today(), 7)
         
         return None
     

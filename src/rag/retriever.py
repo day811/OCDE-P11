@@ -16,9 +16,9 @@ class RAGRetriever:
         self,
         query_text: str,
         k: int = 5,
-        date_constraint: Optional[datetime] = None,
+        date_constraint: Optional[tuple[datetime,int]] = None,
         city_constraint: Optional[str] = None,
-        date_tolerance_days: int = 0
+        dept_constraint: Optional[str] = None,
     ) -> List[Dict]:
         """Retrieve and filter chunks"""
         
@@ -44,17 +44,17 @@ class RAGRetriever:
             results,
             date_constraint=date_constraint,
             city_constraint=city_constraint,
-            date_tolerance_days=date_tolerance_days
-        )
+            dept_constraint=dept_constraint,
+       )
         
         return filtered_results[:k]
     
     def _filter_chunks(
         self,
         chunks: List[Dict],
-        date_constraint: Optional[datetime] = None,
+        date_constraint: Optional[tuple[datetime,int]] = None,
         city_constraint: Optional[str] = None,
-        date_tolerance_days: int = 0
+        dept_constraint: Optional[str] = None,
     ) -> List[Dict]:
         """Filter chunks by date and city"""
         filtered = chunks
@@ -63,7 +63,7 @@ class RAGRetriever:
         if date_constraint:
             filtered = [
                 chunk for chunk in filtered
-                if self._matches_date(chunk, date_constraint, date_tolerance_days)
+                if self._matches_date(chunk, date_constraint)
             ]
         
         # Filter by city
@@ -73,22 +73,30 @@ class RAGRetriever:
                 if self._matches_city(chunk, city_constraint)
             ]
         
+        # Filter by department
+        if dept_constraint:
+            filtered = [
+                chunk for chunk in filtered
+                if self._matches_dept(chunk, dept_constraint)
+            ]
+        
         return filtered
     
 
     @staticmethod
-    def _matches_date(chunk: Dict, target_date: datetime, tolerance_days: int = 0) -> bool:
+    def _matches_date(chunk: Dict, date_range: Optional[tuple[datetime,int]]) -> bool:
         """Check if chunk date matches target date"""
         try:
             timings = chunk.get('dates', '')
-            
-            for timing in timings:
-                begin = timing['begin']
-                chunk_date = datetime.fromisoformat(begin).date()
-                target = target_date.date()
-                delta = abs((chunk_date - target).days)
-                if delta <= tolerance_days :
-                    return True
+            if date_range:
+                for timing in timings:
+                    begin = timing['begin']
+                    chunk_date = datetime.fromisoformat(begin).date()
+                    target = date_range[0].date()
+                    tolerance_days = date_range[1]
+                    delta = abs((chunk_date - target).days)
+                    if delta <= tolerance_days :
+                        return True
             return False
         except:
             return False
@@ -98,6 +106,16 @@ class RAGRetriever:
         """Check if chunk city matches target city"""
         try:
             chunk_city = chunk.get('city', '').lower()
+            chunk_address = chunk.get('city', '').lower()
             return chunk_city == target_city.lower()
+        except:
+            return False
+    
+    @staticmethod
+    def _matches_dept(chunk: Dict, target_city: str) -> bool:
+        """Check if chunk department matches target city"""
+        try:
+            chunk_dept = chunk.get('dept', '').lower()
+            return chunk_dept == target_city.lower()
         except:
             return False

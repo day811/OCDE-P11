@@ -78,7 +78,8 @@ class RAGEngine:
                 query_text=question,
                 k=top_k * 2,
                 date_constraint=constraints['date'],
-                city_constraint=constraints['city']
+                city_constraint=constraints['city'],
+                dept_constraint=constraints['dept'],
             )
             chunks = chunks[:top_k]
             
@@ -141,7 +142,7 @@ Basé sur le contexte, fournis une réponse concise recommandant les événement
                     }
                 ]
             )
-            return llm_response.choices[0].message.content
+            return llm_response.choices[0].message.content # type: ignore
         except Exception as e:
             logger.error(f"LLM generation error: {e}")
             return "Désolé, je n'ai pas pu générer une réponse."
