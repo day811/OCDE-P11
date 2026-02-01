@@ -72,6 +72,7 @@ class Config:
     LOC_LAT = "location_lat"
     LOC_LON = "location_lon"
     TIMINGS = "timings"
+    FIRST_DATE = "first_date"
     
     
     SELECTED_FIELDS = [UID, TITLE, DESC, LONG_DESC, LOC_NAME, LOC_DEPT, LOC_CITY, LOC_ADDRESS, CONDITIONS, URL, TIMINGS, LOC_COORD ]
