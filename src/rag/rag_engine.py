@@ -89,14 +89,15 @@ class RAGEngine:
             # Step 4: Generate answer with LLM
             prompt = self._build_prompt(question, context)
             answer = self._generate_answer(prompt)
-            
+
             # Step 5: Format response
             sources = [
                 {
                     'event_id': chunk.get('event_id'),
                     'title': chunk.get('title'),
                     'city': chunk.get('city'),
-                    'date': chunk.get('date'),
+                    'dept': chunk.get('dept'),
+                    'dates': self.retriever._matches_date(chunk, constraints['date'],only_first=False),
                     'url': chunk.get('url'),
                     'distance': chunk.get('distance')
                 }
@@ -109,8 +110,9 @@ class RAGEngine:
                 'answer': answer,
                 'sources': sources,
                 'constraints': {
-                    'date': constraints['date'].isoformat() if constraints['date'] else None,
-                    'city': constraints['city']
+                    'date': constraints['date'],
+                    'city': constraints['city'],
+                    'dept': constraints['dept']
                 },
                 'execution_time': execution_time
             }
