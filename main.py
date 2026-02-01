@@ -36,7 +36,7 @@ def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
         for i, source in enumerate(result['sources'], 1):
             print(f"\n{i}. {source['title']}")
             print(f"   📍 {source['city']}")
-            print(f"   📅 {source['date']}")
+            print(f"   📅 {source['dates']}")
             if source['distance']:
                 print(f"   ⭐ Relevance: {int(source['distance']*100)}%")
             print(f"   🔗 {source['url']}")
