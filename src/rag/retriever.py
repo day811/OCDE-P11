@@ -63,7 +63,7 @@ class RAGRetriever:
         if date_constraint:
             filtered = [
                 chunk for chunk in filtered
-                if self._matches_date(chunk, date_constraint)
+                if len(self._matches_date(chunk, date_constraint)) > 0
             ]
         
         # Filter by city
@@ -84,8 +84,9 @@ class RAGRetriever:
     
 
     @staticmethod
-    def _matches_date(chunk: Dict, date_range: Optional[tuple[datetime,int]]) -> bool:
+    def _matches_date(chunk: Dict, date_range: Optional[tuple[datetime,int]],only_first=True) -> list:
         """Check if chunk date matches target date"""
+        selected_dates = []
         try:
             timings = chunk.get('dates', '')
             if date_range:
@@ -96,18 +97,19 @@ class RAGRetriever:
                     tolerance_days = date_range[1]
                     delta = abs((chunk_date - target).days)
                     if delta <= tolerance_days :
-                        return True
-            return False
+                        selected_dates.append(chunk_date)
+                        if only_first : return selected_dates
+            return selected_dates
         except:
-            return False
+            return []
     
     @staticmethod
     def _matches_city(chunk: Dict, target_city: str) -> bool:
         """Check if chunk city matches target city"""
         try:
             chunk_city = chunk.get('city', '').lower()
-            chunk_address = chunk.get('city', '').lower()
-            return chunk_city == target_city.lower()
+            chunk_address = chunk.get('address', '').lower()
+            return target_city in chunk_city.lower() or target_city in chunk_address.lower()
         except:
             return False
     
