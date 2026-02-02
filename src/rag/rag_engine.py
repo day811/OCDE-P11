@@ -9,7 +9,7 @@ from datetime import datetime
 
 from src.rag.query_parser import QueryParser
 from src.rag.retriever import RAGRetriever
-from src.rag.context_builder import ContextBuilder
+from src.utils.token_accounting import get_accounting
 from config import Config
 
 
@@ -40,7 +40,6 @@ class RAGEngine:
             metadata=self.metadata,
             embed_function=self._embed_query
         )
-        self.context_builder = ContextBuilder
         
         # Initialize Mistral LLM
         from mistralai import Mistral, UserMessage
@@ -60,6 +59,42 @@ class RAGEngine:
         )
         return embeddings[0].tolist()
     
+    
+    def build_context(self,chunks: list[Dict], constraints:dict) -> str:
+        """Build formatted context from chunks"""
+        if not chunks:
+            return "Aucun événement n'a été trouvé pour votre recherche."
+        
+        context = "Voici les événements pertinents trouvés :\n\n"
+        
+        for i, chunk in enumerate(chunks, 1):
+            title = chunk.get('title', 'Sans titre')
+            city = chunk.get('city', 'Lieu non spécifié')
+            dates = self.retriever._matches_date(chunk, constraints['date'],only_first=False)
+            dates = " + ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
+            text = chunk.get('text', 'Description non disponible')
+            url = chunk.get('url', '')
+            distance = chunk.get('distance')
+            
+            context += f"{i}. **{title}**\n"
+            context += f"   📍 Lieu: {city}\n"
+            context += f"   📅 Dates: {dates}\n"
+            
+            if distance:
+                relevance = int(distance * 100)
+                context += f"   ⭐ Pertinence: {relevance}%\n"
+            
+            context += f"\n   {text}\n"
+            
+            if url:
+                context += f"   🔗 {url}\n"
+            
+            context += "\n"
+        
+        return context
+
+
+
     def answer_question(
         self,
         question: str,
@@ -72,7 +107,8 @@ class RAGEngine:
         try:
             # Step 1: Parse constraints
             constraints = self.query_parser.parse_constraints(question)
-            
+            accounting = get_accounting()
+           
             # Step 2: Retrieve chunks
             chunks = self.retriever.retrieve(
                 query_text=question,
@@ -84,27 +120,42 @@ class RAGEngine:
             chunks = chunks[:top_k]
             
             # Step 3: Build context
-            context = self.context_builder.build_context(chunks)
+            context = self.build_context(chunks, constraints)
             
             # Step 4: Generate answer with LLM
             prompt = self._build_prompt(question, context)
             answer = self._generate_answer(prompt)
 
             # Step 5: Format response
-            sources = [
-                {
-                    'event_id': chunk.get('event_id'),
-                    'title': chunk.get('title'),
-                    'city': chunk.get('city'),
-                    'dept': chunk.get('dept'),
-                    'dates': self.retriever._matches_date(chunk, constraints['date'],only_first=False),
-                    'url': chunk.get('url'),
-                    'distance': chunk.get('distance')
-                }
-                for chunk in chunks
-            ]
+            sources = []
+            for chunk in chunks:
+                dates = self.retriever._matches_date(chunk, constraints['date'],only_first=False)
+                dates = " et ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
+                sources .append(
+                    {
+                        'event_id': chunk.get('event_id'),
+                        'title': chunk.get('title'),
+                        'city': chunk.get('city'),
+                        'dept': chunk.get('dept'),
+                        'dates': dates,
+                        'url': chunk.get('url'),
+                        'distance': chunk.get('distance')
+                    }
+                )
             
             execution_time = time.time() - start_time
+            
+            # ✅ LOG TOKENS
+            query_tokens = len(question.split()) * 1.3
+            context_tokens = len(context.split()) * 1.3
+            llm_tokens = len(answer.split()) * 1.3
+            
+            get_accounting().log_search(
+                query_tokens=int(query_tokens),
+                context_tokens=int(context_tokens),
+                llm_tokens=int(llm_tokens),
+                operation='search'
+            )
             
             return {
                 'answer': answer,
