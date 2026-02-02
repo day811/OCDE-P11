@@ -7,6 +7,7 @@ import json
 import numpy as np
 from pathlib import Path
 from typing import List, Dict, Tuple
+from src.utils.token_accounting import get_accounting
 import logging
 from mistralai import Mistral
 import faiss
@@ -111,6 +112,10 @@ class EventVectorizer:
         logger.info(f"Batch size: {batch_size} chunks per API call")
         
         all_embeddings = []
+        token_stats = {
+            'total_input_tokens': 0,
+            'batches': []
+        }
         
         try:
             # Process in batches
@@ -121,7 +126,7 @@ class EventVectorizer:
                 end_idx = min(start_idx + batch_size, total_chunks)
                 batch_texts = texts[start_idx:end_idx]
                 
-                logger.info(f"Batch {batch_idx + 1}/{num_batches}: Vectorizing chunks {start_idx}-{end_idx}...")
+                logger.debug(f"Batch {batch_idx + 1}/{num_batches}: Vectorizing chunks {start_idx}-{end_idx}...")
                 
                 # Call Mistral API for this batch
                 response = self.client.embeddings.create(
@@ -129,7 +134,23 @@ class EventVectorizer:
                     inputs=batch_texts
                 )
                 
-                # Extract embeddings from response
+                # ✅ Tracker les tokens par batch
+                batch_tokens = response.usage.total_tokens or 0
+                token_stats['total_input_tokens'] += batch_tokens
+                token_stats['batches'].append({
+                    'batch_id': batch_idx + 1,
+                    'chunk_count': len(batch_texts),
+                    'input_tokens': batch_tokens,
+                    'tokens_per_chunk': batch_tokens / len(batch_texts)
+                })
+                
+                logger.debug(
+                    f"Batch {batch_idx + 1}/{num_batches} | "
+                    f"Chunks: {start_idx}-{end_idx} | "
+                    f"Tokens: {batch_tokens} | "
+                    f"Avg: {batch_tokens / len(batch_texts):.1f} tok/chunk"
+                )
+                            # Extract embeddings from response
                 batch_embeddings = np.array([
                     embed.embedding for embed in response.data
                 ]).astype('float32')
@@ -142,10 +163,19 @@ class EventVectorizer:
             
             # Concatenate all batches
             embeddings = np.vstack(all_embeddings)
+            logger.info(
+                f"Vectorization complete | "
+                f"Total tokens: {token_stats['total_input_tokens']} | "
+                f"Shape: {embeddings.shape} | "
+                f"Avg: {token_stats['total_input_tokens'] / total_chunks:.1f} tok/chunk"
+            )
+            get_accounting().log_vectorization(
+                chunks_count= total_chunks,
+                tokens_used=token_stats['total_input_tokens']
+            )
             
-            logger.info(f"✅ Vectorization complete: shape={embeddings.shape}, dtype={embeddings.dtype}")
             return embeddings
-        
+                
         except Exception as e:
             logger.error(f"Vectorization failed: {e}")
             raise  
