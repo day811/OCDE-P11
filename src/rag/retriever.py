@@ -32,12 +32,15 @@ class RAGRetriever:
         
         # Build results with distances
         results = []
+        seen= []
         for idx, (dist, chunk_id) in enumerate(zip(distances[0], indices[0])):
             if chunk_id >= 0:
                 chunk_metadata = self.metadata.get(str(chunk_id), {})
-                chunk_metadata['distance'] = float(dist)
-                chunk_metadata['rank'] = idx
-                results.append(chunk_metadata)
+                if chunk_metadata['event_id'] not in seen:
+                    chunk_metadata['distance'] = float(dist)
+                    chunk_metadata['rank'] = idx
+                    results.append(chunk_metadata)
+                    seen.append(chunk_metadata['event_id'])
         
         # Apply filters
         filtered_results = self._filter_chunks(
@@ -92,10 +95,10 @@ class RAGRetriever:
             if date_range:
                 for timing in timings:
                     begin = timing['begin']
-                    chunk_date = datetime.fromisoformat(begin).date()
+                    chunk_date = datetime.fromisoformat(begin)
                     target = date_range[0].date()
                     tolerance_days = date_range[1]
-                    delta = abs((chunk_date - target).days)
+                    delta = abs((chunk_date.date() - target).days)
                     if delta <= tolerance_days :
                         selected_dates.append(chunk_date)
                         if only_first : return selected_dates
