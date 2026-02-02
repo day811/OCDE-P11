@@ -18,7 +18,7 @@ app = FastAPI(title="RAG Events API", version="1.0.0")
 # Mount static files
 static_dir = Path(__file__).parent / "static"
 if static_dir.exists():
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Global RAG engine instance
 rag_engine = None
@@ -121,3 +121,14 @@ async def get_cities():
         'pau', 'biarritz', 'bayonne'
     ]
     return {"cities": cities}
+
+
+# Remplacer l'endpoint :
+@app.get("/ui/chat", response_class=FileResponse)
+async def chat_ui():
+    """Serve interactive chat interface from file"""
+    chat_html_path = Path(__file__).parent / "static" / "chat.html"
+    if chat_html_path.exists():
+        return FileResponse(str(chat_html_path), media_type="text/html")
+    else:
+        raise HTTPException(status_code=404, detail="chat.html not found")
