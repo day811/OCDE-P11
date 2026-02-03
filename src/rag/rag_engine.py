@@ -21,7 +21,7 @@ class RAGEngine:
     def __init__(self, snapshot_date: Optional[str] = None, environment: str = 'prod'):
         """Initialize RAG Engine"""
         
-        self.snapshot_date = snapshot_date or datetime.now().strftime("%Y-%m-%d")
+        self.snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
         self.environment = environment
         
         # Load Faiss index
@@ -165,6 +165,7 @@ class RAGEngine:
                     'city': constraints['city'],
                     'dept': constraints['dept']
                 },
+                'total_tokens': int(query_tokens + context_tokens + llm_tokens),
                 'execution_time': execution_time
             }
         
