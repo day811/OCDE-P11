@@ -3,6 +3,7 @@ import argparse
 import logging
 from datetime import datetime
 from src.rag.rag_engine import RAGEngine
+from src.utils.token_accounting import get_accounting
 from src.api.app import app
 import uvicorn
 from config import Config
@@ -18,6 +19,11 @@ def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
     try:
         engine = RAGEngine(snapshot_date=snapshot_date)
         result = engine.answer_question(question=question, top_k=top_k)
+        
+        print("\n" + "="*80)
+        print("❓ QUESTION")
+        print("="*80)
+        print(question)
         
         print("\n" + "="*80)
         print("💬 ANSWER")
@@ -41,6 +47,9 @@ def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
                 print(f"   ⭐ Relevance: {int(source['distance']*100)}%")
             print(f"   🔗 {source['url']}")
         
+       # Afficher rapport tokens
+        get_accounting().print_report()
+        
         print(f"\n⏱️ Execution time: {result['execution_time']:.3f}s")
         print("="*80 + "\n")
     
@@ -57,6 +66,18 @@ def api_server(host: str = "0.0.0.0", port: int = 8000):
     except Exception as e:
         logger.error(f"Error starting server: {e}")
         exit(1)
+
+def chat_interactive(snapshot_date: str = ""):
+    """Start interactive chat session"""
+    from src.rag.chatbot import ChatBot
+    try:
+        bot = ChatBot(snapshot_date=snapshot_date)
+        bot.interactive_session()
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        exit(1)
+
+
 
 def info():
     """Show info about available commands"""
@@ -100,12 +121,20 @@ def main():
     # Info command
     subparsers.add_parser("info", help="Show help")
     
+    # Dans la fonction main(), ajouter :
+    chat_parser = subparsers.add_parser('chat', help='Start interactive chatbot')
+    chat_parser.add_argument('-d', '--date', default=Config.DEV_SNAPSHOT_DATE, 
+                            help='Snapshot date YYYY-MM-DD')
+
+
     args = parser.parse_args()
     
     if args.command == "search":
         search_cli(question=args.question, top_k=args.top_k, snapshot_date=args.date)
     elif args.command == "api":
         api_server(host=args.host, port=args.port)
+    elif args.command == 'chat':
+        chat_interactive(snapshot_date=args.date)
     else:
         info()
 
