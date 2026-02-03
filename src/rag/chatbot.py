@@ -14,11 +14,11 @@ logger = logging.getLogger(__name__)
 class ChatBot:
     """Chatbot for event recommendations"""
     
-    def __init__(self, snapshot_date=Config.DEV_SNAPSHOT_DATE):
+    def __init__(self, snapshot_date=Config.DEV_SNAPSHOT_DATE, mode: str = 'CLI'):
         import faiss
         import json
         from pathlib import Path
-        
+
         # Load Faiss index and metadata
         
         index_path = Config.get_index_path(snapshot_date)
@@ -36,6 +36,8 @@ class ChatBot:
             metadata=self.metadata,
             embed_function=self._embed_query
         )
+        
+        output_format = "HTML" if mode == "UI" else "Markdown"
         
         # Initialize LangChain RAG
         self.rag = LangChainRAG(
@@ -68,23 +70,13 @@ class ChatBot:
         
         result = self.rag.answer(user_question)
         
-        # ✅ LOG TOKENS
-        query_tokens = len(result['user_question'].split()) * 1.3
-        context_tokens = len(result['answer'].split()) * 1.3
-        llm_tokens = len(result['answer'].split()) * 1.3
-        
-        get_accounting().log_search(
-            query_tokens=int(query_tokens),
-            context_tokens=int(context_tokens),
-            llm_tokens=int(llm_tokens),
-            operation='search'
-        )
 
         return {
             'question': user_question,
             'answer': result['answer'],
             'sources': result['sources'],
-            'success': result['success']
+            'success': result['success'],
+            'total_tokens': result['total_tokens']
         }
     
     def interactive_session(self):

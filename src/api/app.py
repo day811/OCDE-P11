@@ -97,7 +97,7 @@ async def chat_endpoint(request: SearchRequest):
         start_time = time.time()
         
         from src.rag.chatbot import ChatBot
-        bot = ChatBot()
+        bot = ChatBot(mode = 'UI')
         result = bot.chat(request.question)
         
         execution_time = time.time() - start_time

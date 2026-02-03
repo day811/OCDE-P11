@@ -80,7 +80,8 @@ class FaissRetrieverAdapter(BaseRetriever):
 class LangChainRAG:
     """RAG system using LangChain orchestration"""
     
-    def __init__(self, rag_retriever, query_parser, mistral_api_key):
+    def __init__(self, rag_retriever, query_parser, mistral_api_key, output_fromat:str = "Markdown"):
+        
         self.retriever = FaissRetrieverAdapter(rag_retriever, query_parser)
         
         # Initialize Mistral LLM
@@ -90,8 +91,9 @@ class LangChainRAG:
         )
         
         # Define RAG prompt
+        format = f"Tous les résultats doivent être formatés en {output_fromat}."
         self.prompt = PromptTemplate(
-            input_variables=['context', 'question'],
+            input_variables=['context', 'question', ''],
             template="""Tu es un assistant expert en événements culturels en Occitanie.
 
 Voici les événements pertinents trouvés :
@@ -100,7 +102,8 @@ Voici les événements pertinents trouvés :
 Question de l'utilisateur : {question}
 
 Fournis une recommandation personnalisée basée sur ces événements.
-Sois concis et pertinent."""
+Sois concis et pertinent.
+""" + format
         )
         
         # Create RAG chain with LangChain
@@ -114,6 +117,7 @@ Sois concis et pertinent."""
     
     def answer(self, question: str) -> dict:
         """Answer a question using LangChain RAG"""
+        total_tokens = 0
         try:
             result = self.qa_chain({'query': question})
             
@@ -121,7 +125,8 @@ Sois concis et pertinent."""
             query_tokens = len(question.split()) * 1.3  # rough estimate
             context_tokens = len(str(result.get('source_documents', '')).split()) * 1.3
             llm_tokens = len(result['result'].split()) * 1.3
-            
+            total_tokens = int(query_tokens + context_tokens + llm_tokens)
+
             accounting = get_accounting()
             accounting.log_search(
                 query_tokens=int(query_tokens),
@@ -132,6 +137,7 @@ Sois concis et pertinent."""
             return {
                 'answer': result['result'],
                 'sources': result.get('source_documents', []),
+                'total_tokens': total_tokens,
                 'success': True
             }
         except Exception as e:
@@ -139,5 +145,6 @@ Sois concis et pertinent."""
             return {
                 'answer': f"Erreur: {str(e)}",
                 'sources': [],
+                'total_tokens': total_tokens,
                 'success': False
             }
