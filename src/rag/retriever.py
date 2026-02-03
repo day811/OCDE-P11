@@ -98,8 +98,8 @@ class RAGRetriever:
                     chunk_date = datetime.fromisoformat(begin)
                     target = date_range[0].date()
                     tolerance_days = date_range[1]
-                    delta = abs((chunk_date.date() - target).days)
-                    if delta <= tolerance_days :
+                    delta = (chunk_date.date() - target).days
+                    if delta >=0 and delta <= tolerance_days :
                         selected_dates.append(chunk_date)
                         if only_first : return selected_dates
             return selected_dates
