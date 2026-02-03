@@ -40,6 +40,7 @@ class SearchResponse(BaseModel):
     answer: str
     sources: List[dict]
     constraints: dict
+    total_tokens: int
     execution_time: float
 
 class ExampleQuery(BaseModel):
@@ -85,44 +86,66 @@ async def search(request: SearchRequest):
         logger.error(f"Search error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/v1/examples", response_model=ExamplesResponse)
-async def get_examples():
-    """Get example queries"""
-    examples = [
-        {
-            "description": "Événements ce soir",
-            "question": "Quels événements ce soir à Toulouse ?"
-        },
-        {
-            "description": "Concerts demain",
-            "question": "Quels concerts demain à Montpellier ?"
-        },
-        {
-            "description": "Spectacles ce weekend",
-            "question": "Spectacles ce weekend en Occitanie"
-        },
-        {
-            "description": "Expositions dans 3 jours",
-            "question": "Expositions dans 3 jours à Nîmes"
-        },
-        {
-            "description": "Tous les événements",
-            "question": "Quels sont les événements disponibles ?"
+@app.post("/api/v1/chat", response_model=SearchResponse)
+async def chat_endpoint(request: SearchRequest):
+    """Search for events with LangChain RAG"""
+    try:
+        if not request.question.strip():
+            raise HTTPException(status_code=400, detail="Question cannot be empty")
+        
+        import time
+        start_time = time.time()
+        
+        from src.rag.chatbot import ChatBot
+        bot = ChatBot()
+        result = bot.chat(request.question)
+        
+        execution_time = time.time() - start_time
+        
+        # ✅ TRANSFORMER LES DOCUMENT LANGCHAIN EN DICT
+        sources = []
+        if result.get('sources'):
+            for doc in result['sources']:
+                # doc est un objet Document avec .metadata et .page_content
+                sources.append({
+                    'title': doc.metadata.get('source', '').split('/')[-1],
+                    'city': doc.metadata.get('city', 'NA'),
+                    'dates': doc.metadata.get('dates', 'NA'),
+                    'url': doc.metadata.get('source', ''),
+                    'event_id': doc.metadata.get('event_id', 'NA'),
+                    'dept': doc.metadata.get('dept', 'NA'),
+                    'distance': 100
+                })
+        
+        # ✅ RETOURNER AVEC TOUS LES CHAMPS REQUIS
+        return {
+            'answer': result.get('answer', ''),
+            'sources': sources,
+            'constraints': {
+                'date': None,
+                'city': None,
+                'dept': None
+            },
+            'execution_time': execution_time,
+            'total_tokens': result.get('total_tokens', 0)
         }
-    ]
-    return ExamplesResponse(examples=examples)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/v1/cities")
-async def get_cities():
-    """Get available cities"""
-    cities = [
-        'toulouse', 'montpellier', 'nîmes', 'perpignan', 'albi',
-        'rodez', 'cahors', 'figeac', 'auch', 'tarbes',
-        'pau', 'biarritz', 'bayonne'
-    ]
-    return {"cities": cities}
-
-
+# Remplacer l'endpoint :
+@app.get("/ui/search", response_class=FileResponse)
+async def search_ui():
+    """Serve interactive chat interface from file"""
+    chat_html_path = Path(__file__).parent / "static" / "search.html"
+    if chat_html_path.exists():
+        return FileResponse(str(chat_html_path), media_type="text/html")
+    else:
+        raise HTTPException(status_code=404, detail="search.html not found")
+    
 # Remplacer l'endpoint :
 @app.get("/ui/chat", response_class=FileResponse)
 async def chat_ui():
