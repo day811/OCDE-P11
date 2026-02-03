@@ -25,7 +25,7 @@
             "args": [
                 "search",
                 "--question",
-                "Je cherche des evenements sur l'emploi la semaine prochaine",
+                "Je cherche des des choses à faire ce week-end dans l'Hérault",
                 "--date",
                 "2026-01-31"
             ],
