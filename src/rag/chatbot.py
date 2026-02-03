@@ -6,6 +6,7 @@ from src.rag.langchain_bridge import LangChainRAG
 from src.rag.retriever import RAGRetriever
 from config import Config
 from src.rag.query_parser import QueryParser
+from src.utils.token_accounting import get_accounting
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,12 +14,13 @@ logger = logging.getLogger(__name__)
 class ChatBot:
     """Chatbot for event recommendations"""
     
-    def __init__(self, snapshot_date=""):
+    def __init__(self, snapshot_date=Config.DEV_SNAPSHOT_DATE):
         import faiss
         import json
         from pathlib import Path
         
         # Load Faiss index and metadata
+        
         index_path = Config.get_index_path(snapshot_date)
         metadata_path = Config.get_metadata_path(snapshot_date)
         
@@ -66,6 +68,18 @@ class ChatBot:
         
         result = self.rag.answer(user_question)
         
+        # ✅ LOG TOKENS
+        query_tokens = len(result['user_question'].split()) * 1.3
+        context_tokens = len(result['answer'].split()) * 1.3
+        llm_tokens = len(result['answer'].split()) * 1.3
+        
+        get_accounting().log_search(
+            query_tokens=int(query_tokens),
+            context_tokens=int(context_tokens),
+            llm_tokens=int(llm_tokens),
+            operation='search'
+        )
+
         return {
             'question': user_question,
             'answer': result['answer'],
