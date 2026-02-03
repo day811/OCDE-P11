@@ -28,30 +28,32 @@ class QueryParser:
             return (datetime(aa,mm,dd),0)
 
         # Today/tonight
-        if re.search(r'\b(ce soir|aujourd\'hui|today|ce jour|ce matin|cet après-midi)\b', query_lower):
+        if re.search(r'\b(ce soir|aujourd\'hui|ce jour|ce matin|cet après-midi)\b', query_lower):
             return (datetime.today(),0)
         
         # Tomorrow
-        if re.search(r'\b(demain|tomorrow)\b', query_lower):
-            return (datetime.today(), 1)
+        if re.search(r'\b(demain)\b', query_lower):
+            return (datetime.today()+ timedelta(days=1), 0)
         
         # Relative days: "dans X jours"
-        match = re.search(r'\bdans\s+(\d+)\s+(jour|jours|day|days)\b', query_lower)
+        match = re.search(r'\bdans\s+(\d+)\s+(jour|jours)\b', query_lower)
         if match:
             days = int(match.group(1))
-            return (datetime.today(), days)
+            return (datetime.today() + timedelta(days=days), 0)
         
         # This weekend
-        if re.search(r'\b(ce weekend|ce week-end|this weekend)\b', query_lower):
+        if re.search(r'\b(ce weekend|ce week-end)\b', query_lower):
             today = datetime.today()
-            days_until_saturday = (5 - today.weekday()) % 7
-            if days_until_saturday == 0:
-                days_until_saturday = 7
-            return (today ,days_until_saturday)
+            days_until_saturday = (5 - today.weekday()) % 7 or 7
+            
+            return (today + timedelta(days=days_until_saturday) ,1)
         
         # Next week
-        if re.search(r'\b(semaine prochaine|next week)\b', query_lower):
-            return (datetime.today(), 7)
+        if re.search(r'\b(semaine prochaine)\b', query_lower):
+            today = datetime.today()
+            days_until_monday = (- today.weekday()) % 7 or 7
+             
+            return (today + timedelta(days=days_until_monday) ,6)
         
         return None
     
