@@ -5,7 +5,6 @@ Connects Faiss retriever + Mistral LLM
 """
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.documents import Document
-from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_mistralai.chat_models import ChatMistralAI
 from langchain_classic.chains import RetrievalQA
 from langchain_core.prompts import PromptTemplate
@@ -37,10 +36,10 @@ class FaissRetrieverAdapter(BaseRetriever):
     def _get_relevant_documents(self, query: str) -> List[Document]: # type: ignore
         """Get relevant documents from Faiss through RAGRetriever"""
         # Parse constraints from query
-        constraints = self.query_parser.parse_constraints(query)
+        constraints = self.query_parser.parse_constraints(query) # type: ignore
         
         # Retrieve chunks using your existing RAGRetriever
-        chunks = self.rag_retriever.retrieve(
+        chunks = self.rag_retriever.retrieve( # type: ignore
             query_text=query,
             k=10,
             date_constraint=constraints['date'],
@@ -51,12 +50,14 @@ class FaissRetrieverAdapter(BaseRetriever):
         # Convert chunks to LangChain Documents
         documents = []
         for chunk in chunks:
+            dates = self.rag_retriever._matches_date(chunk, constraints['date'],only_first=False)
+            dates = " et ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
             doc_text = f"""
-Title: {chunk.get('title', 'N/A')}
-City: {chunk.get('city', 'N/A')}
-Dates: {', '.join(chunk.get('dates', []))}
-Description: {chunk.get('text', '')}
-URL: {chunk.get('url', 'N/A')}
+            Title: {chunk.get('title', 'N/A')}
+            City: {chunk.get('city', 'N/A')}
+            Dates: {dates}
+            Description: {chunk.get('text', '')}
+            URL: {chunk.get('url', 'N/A')}
             """
             documents.append(Document(
                 page_content=doc_text,
@@ -64,7 +65,7 @@ URL: {chunk.get('url', 'N/A')}
                     'source': chunk.get('url'),
                     'event_id': chunk.get('event_id'),
                     'city': chunk.get('city'),
-                    'dates': chunk.get('dates')
+                    'dates': dates
                 }
             ))
         
