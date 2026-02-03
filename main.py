@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from src.rag.rag_engine import RAGEngine
 from src.utils.token_accounting import get_accounting
+from src.utils.utils import flat_date_constraints
 from src.api.app import app
 import uvicorn
 from config import Config
@@ -31,7 +32,7 @@ def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
         print(result['answer'])
         
         if result['constraints']['date']:
-            print(f"\n📅 Date: {result['constraints']['date']}")
+            print(f"\n📅 Date: {flat_date_constraints(result['constraints']['date'])}")
         if result['constraints']['city']:
             print(f"🏙️ City: {result['constraints']['city']}")
         
@@ -71,7 +72,7 @@ def chat_interactive(snapshot_date: str = ""):
     """Start interactive chat session"""
     from src.rag.chatbot import ChatBot
     try:
-        bot = ChatBot(snapshot_date=snapshot_date)
+        bot = ChatBot(snapshot_date=snapshot_date, mode = 'CLI')
         bot.interactive_session()
     except Exception as e:
         logger.error(f"Error: {e}")
