@@ -1,7 +1,8 @@
 # src/rag/retriever.py
 import numpy as np
 from typing import List, Dict, Optional, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
+from src.utils.utils import clean_location, flat_date_constraints
 
 class RAGRetriever:
     """Retrieve and filter chunks from Faiss index"""
@@ -12,6 +13,7 @@ class RAGRetriever:
         self.metadata = metadata
         self.embed_function = embed_function
     
+
     def retrieve(
         self,
         query_text: str,
@@ -23,6 +25,7 @@ class RAGRetriever:
         """Retrieve and filter chunks"""
         
         # Embed query
+        query_text += flat_date_constraints(date_constraint)
         query_embedding = self.embed_function(query_text)
         query_vector = np.array([query_embedding], dtype=np.float32)
         
@@ -60,29 +63,21 @@ class RAGRetriever:
         dept_constraint: Optional[str] = None,
     ) -> List[Dict]:
         """Filter chunks by date and city"""
-        filtered = chunks
-        
+        filtered = []
+        for chunk in chunks:
         # Filter by date
-        if date_constraint:
-            filtered = [
-                chunk for chunk in filtered
-                if len(self._matches_date(chunk, date_constraint)) > 0
-            ]
+            if date_constraint and len(self._matches_date(chunk, date_constraint)) <= 0:
+                continue
         
-        # Filter by city
-        if city_constraint:
-            filtered = [
-                chunk for chunk in filtered
-                if self._matches_city(chunk, city_constraint)
-            ]
-        
-        # Filter by department
-        if dept_constraint:
-            filtered = [
-                chunk for chunk in filtered
-                if self._matches_dept(chunk, dept_constraint)
-            ]
-        
+            # Filter by city
+            if city_constraint and not self._matches_city(chunk, city_constraint):
+                continue
+            
+            # Filter by department
+            if dept_constraint and not self._matches_dept(chunk, dept_constraint):
+                continue
+            filtered.append(chunk)
+            
         return filtered
     
 
@@ -110,17 +105,20 @@ class RAGRetriever:
     def _matches_city(chunk: Dict, target_city: str) -> bool:
         """Check if chunk city matches target city"""
         try:
-            chunk_city = chunk.get('city', '').lower()
-            chunk_address = chunk.get('address', '').lower()
-            return target_city in chunk_city.lower() or target_city in chunk_address.lower()
+            chunk_city = clean_location(chunk.get('city', ''))
+            chunk_address = clean_location(chunk.get('address', ''))
+            target_city = clean_location(target_city)
+            return target_city in chunk_city or target_city in chunk_address
         except:
             return False
     
     @staticmethod
-    def _matches_dept(chunk: Dict, target_city: str) -> bool:
+    def _matches_dept(chunk: Dict, target_dept: str) -> bool:
         """Check if chunk department matches target city"""
         try:
-            chunk_dept = chunk.get('dept', '').lower()
-            return chunk_dept == target_city.lower()
+            chunk_dept = clean_location(chunk.get('dept', ''))
+            target_dept = clean_location(target_dept)
+            return chunk_dept == target_dept
         except:
             return False
+
