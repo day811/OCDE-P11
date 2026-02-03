@@ -2,17 +2,22 @@
 import re
 from datetime import datetime, timedelta
 from typing import Optional, Dict
+from src.utils.utils import clean_location
 
 class QueryParser:
     """Extract date and city constraints from user questions"""
     
     CITIES = [
-        'toulouse', 'montpellier', 'nîmes', 'perpignan', 'albi',
-        'rodez', 'cahors', 'figeac', 'auch', 'lunel',
-        'sete', 'millau', 'narbonne', "carcassonne", "foix", "montauban", 
+        'Toulouse', 'Montpellier', 'Nîmes', 'Perpignan', 'Albi',
+        'Rodez', 'Cahors', 'Figeac', 'Auch', 'Lunel', 'Alès',
+        'Sète', 'Millau', 'Narbonne', "Carcassonne", "Foix", "Montauban", 
     ]
-    DEPARTMENTS = ['ariege', 'aude', 'aveyron', 'gard', 'haute-garonne', 'herault', 'lot',
-                   'lozere', 'hautes-pyrenees', 'pyrenees-orientales', 'tarn', 'tarn-et-garonne']
+    DEPARTMENTS = ['Ariège', 'Aude', 'Aveyron', 'Gard', 'Haute-Garonne', 'Hérault', 'Lot',
+                   'Lozere', 'Hautes-Pyrénées', 'Pyrénées-Orientales', 'Tarn', 'Tarn-et-Garonne']
+    
+
+
+    
     
     @staticmethod
     def parse_date(query: str) -> Optional[tuple[datetime,int]]:
@@ -57,29 +62,30 @@ class QueryParser:
         
         return None
     
+    
     @staticmethod
     def parse_city(query: str) -> Optional[str]:
         """Extract city from query"""
-        query_lower = query.lower()
-        
-        for city in QueryParser.CITIES:
-            if re.search(rf'\b(à|dans|de|près)\s+{city}\b', query_lower):
-                return city.capitalize()
-            if re.search(rf'\b{city}\b', query_lower):
-                return city.capitalize()
+        query = clean_location(query)
+
+        clean_cities = [clean_location(city) for city in QueryParser.CITIES]
+
+        for index, city in enumerate(clean_cities):
+            if re.search(rf'\b{city}\b', query):
+                return QueryParser.CITIES[index]
         
         return None
     
     @staticmethod
     def parse_department(query: str) -> Optional[str]:
         """Extract department from query"""
-        query_lower = query.lower()
+        query = clean_location(query)
         
-        for city in QueryParser.DEPARTMENTS:
-            if re.search(rf'\b(à|dans|de|près)\s+{city}\b', query_lower):
-                return city.capitalize()
-            if re.search(rf'\b{city}\b', query_lower):
-                return city.capitalize()
+        clean_depts = [clean_location(dept) for dept in QueryParser.DEPARTMENTS]
+
+        for index, dept in enumerate(clean_depts):
+            if re.search(rf'\b{dept}\b', query):
+                return QueryParser.DEPARTMENTS[index]
         
         return None
 
