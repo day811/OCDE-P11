@@ -38,7 +38,7 @@ class TestChunking(unittest.TestCase):
         """Set up test data"""
         cls.vectorizer = EventVectorizer(
             model_name="mistral-embed",
-            api_key=Config.MISTRAL_API_KEY
+            api_key=Config.API_KEY
         )
         
         # Create sample events
@@ -155,7 +155,7 @@ class TestVectorization(unittest.TestCase):
         """Set up test data"""
         cls.vectorizer = EventVectorizer(
             model_name="mistral-embed",
-            api_key=Config.MISTRAL_API_KEY
+            api_key=Config.API_KEY
         )
         
         # Create simple test chunks
@@ -226,7 +226,7 @@ class TestFaissIndexing(unittest.TestCase):
         """Set up test data"""
         cls.vectorizer = EventVectorizer(
             model_name="mistral-embed",
-            api_key=Config.MISTRAL_API_KEY
+            api_key=Config.API_KEY
         )
         
         # Create test embeddings (mock)
@@ -323,7 +323,7 @@ class TestMetadataSaving(unittest.TestCase):
         """Set up test data"""
         cls.vectorizer = EventVectorizer(
             model_name="mistral-embed",
-            api_key=Config.MISTRAL_API_KEY
+            api_key=Config.API_KEY
         )
         
         # Create sample events
@@ -451,7 +451,7 @@ class TestIndexSaving(unittest.TestCase):
         """Set up test data"""
         cls.vectorizer = EventVectorizer(
             model_name="mistral-embed",
-            api_key=Config.MISTRAL_API_KEY
+            api_key=Config.API_KEY
         )
         
         # Create test embeddings
