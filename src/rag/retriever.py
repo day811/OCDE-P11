@@ -2,7 +2,7 @@
 import numpy as np
 from typing import List, Dict, Optional, Callable
 from datetime import datetime, timedelta
-from src.utils.utils import clean_location, flat_date_constraints
+from src.utils.utils import normalize_str, flat_date_constraints
 
 class RAGRetriever:
     """Retrieve and filter chunks from Faiss index"""
@@ -105,9 +105,9 @@ class RAGRetriever:
     def _matches_city(chunk: Dict, target_city: str) -> bool:
         """Check if chunk city matches target city"""
         try:
-            chunk_city = clean_location(chunk.get('city', ''))
-            chunk_address = clean_location(chunk.get('address', ''))
-            target_city = clean_location(target_city)
+            chunk_city = normalize_str(chunk.get('city', ''))
+            chunk_address = normalize_str(chunk.get('address', ''))
+            target_city = normalize_str(target_city)
             return target_city in chunk_city or target_city in chunk_address
         except:
             return False
@@ -116,8 +116,8 @@ class RAGRetriever:
     def _matches_dept(chunk: Dict, target_dept: str) -> bool:
         """Check if chunk department matches target city"""
         try:
-            chunk_dept = clean_location(chunk.get('dept', ''))
-            target_dept = clean_location(target_dept)
+            chunk_dept = normalize_str(chunk.get('dept', ''))
+            target_dept = normalize_str(target_dept)
             return chunk_dept == target_dept
         except:
             return False
