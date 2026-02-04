@@ -1,8 +1,8 @@
 from typing import Optional
 from datetime import datetime, timedelta
 
-def clean_location(location:str) -> str:
-    location = location.strip().lower()
+def normalize_str(text:str) -> str:
+    location = text.strip().lower()
     """ Remove accents from text """
     accents = { 'a': ['à', 'ã', 'á', 'â'],
                 'e': ['é', 'è', 'ê', 'ë'],
@@ -17,17 +17,19 @@ def clean_location(location:str) -> str:
     return location    
 
 def flat_date_constraints(
-    self,
     date_constraint: Optional[tuple[datetime,int]] = None,
+    format:str = "%A %-d %B %Y",
 ):
-
+    
+    import locale
+    locale.setlocale(locale.LC_TIME,'')
     result = ""
     if date_constraint and len(date_constraint):
         begin  = date_constraint[0]
         end = datetime = date_constraint[0] + timedelta(date_constraint[1])
         if not date_constraint[1]:
-            result = f"\nDate : le {begin.date().strftime("%d-%m-%y")}"    
+            result = f"\nDate : le {begin.date().strftime(format)}"    
         else:
-            result = f"\nDate : du {begin.date().strftime("%d-%m-%y")} au {end.date().strftime("%d-%m-%y")}"  
+            result = f"\nDate : du {begin.date().strftime(format)} au {end.date().strftime(format)}"  
     return result
 
