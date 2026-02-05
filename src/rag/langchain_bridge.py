@@ -115,7 +115,7 @@ Sois concis et pertinent.
             chain_type_kwargs={'prompt': self.prompt}
         )
     
-    def answer(self, question: str) -> dict:
+    def answer(self, question: str, snapshot_date : str ) -> dict:
         """Answer a question using LangChain RAG"""
         total_tokens = 0
         try:

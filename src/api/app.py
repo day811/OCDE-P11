@@ -35,6 +35,7 @@ class SearchRequest(BaseModel):
     question: str
     top_k: int = 5
     snapshot_date: Optional[str] = None
+    temperature: Optional[float] = None
 
 class SearchResponse(BaseModel):
     answer: str
@@ -76,6 +77,7 @@ async def search(request: SearchRequest):
             question=request.question,
             top_k=request.top_k,
             snapshot_date=request.snapshot_date
+            temperature=request.temperature  # Override or None            
         )
         
         return result

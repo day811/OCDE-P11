@@ -9,11 +9,13 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 from src.utils.token_accounting import get_accounting
 import logging
-from mistralai import Mistral
+
 import faiss
 from config import Config
 import re
 import time
+
+from src.llm.factory import get_llm
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +24,12 @@ class EventVectorizer:
     Convertit les événements textes en vecteurs indexés dans Faiss.
     """
     
-    def __init__(self, model_name: str = "mistral-embed", api_key: str = ""):
-        self.model_name = model_name
-        self.client = Mistral(api_key=api_key)
-        self.chunks_to_metadata = {}
+    def __init__(self, llm = None):
+        self.model_name = Config.LLM_PROVIDER
+#        self.client = llm_api(api_key=api_key)
+        self.llm = llm or get_llm(
+            provider=Config.LLM_PROVIDER,
+            embed_model=Config.get_embed_model())
     
 
     def split_text(self, input_text, chunk_size: int = 500, level=0):
@@ -128,20 +132,19 @@ class EventVectorizer:
                 
                 logger.debug(f"Batch {batch_idx + 1}/{num_batches}: Vectorizing chunks {start_idx}-{end_idx}...")
                 
-                # Call Mistral API for this batch
-                response = self.client.embeddings.create(
-                    model=self.model_name,
-                    inputs=batch_texts
-                )
-                
+                # Call LLM API for this batch
+                batch_embeddings = self.llm.embed(batch_texts)  # Passe la liste entière
+                batch_embeddings = np.array(batch_embeddings).astype(np.float32)
+                all_embeddings.append(batch_embeddings)
+               
                 # ✅ Tracker les tokens par batch
-                batch_tokens = response.usage.total_tokens or 0
+                batch_tokens = len(" ".join(batch_texts).split())  # Approximate
                 token_stats['total_input_tokens'] += batch_tokens
                 token_stats['batches'].append({
                     'batch_id': batch_idx + 1,
                     'chunk_count': len(batch_texts),
                     'input_tokens': batch_tokens,
-                    'tokens_per_chunk': batch_tokens / len(batch_texts)
+                    'tokens_per_chunk': batch_tokens / len(batch_texts) if batch_texts else 0
                 })
                 
                 logger.debug(
@@ -151,15 +154,10 @@ class EventVectorizer:
                     f"Avg: {batch_tokens / len(batch_texts):.1f} tok/chunk"
                 )
                             # Extract embeddings from response
-                batch_embeddings = np.array([
-                    embed.embedding for embed in response.data
-                ]).astype('float32')
-                
-                all_embeddings.append(batch_embeddings)
                 
                 logger.info(f"  ✓ Batch {batch_idx + 1}: {len(batch_embeddings)} embeddings created")
 
-                time.sleep(0.5)
+                time.sleep(2)
             
             # Concatenate all batches
             embeddings = np.vstack(all_embeddings)

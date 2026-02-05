@@ -43,9 +43,42 @@ class Config:
     # Current execution environment
     ENVIRONMENT = Environment[os.getenv("RAG_ENVIRONMENT", "development").upper()]
     
-    # ============= API CONFIGURATION =============
-    MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+# ==================== LLM CONFIGURATION ====================
     
+    # Provider: 'mistral', 'openai', 'gemini'
+    LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'mistral')
+    
+    # API Keys
+    API_KEYS = { 
+        'mistral' : os.getenv('MISTRAL_API_KEY') ,
+        'openai' :  os.getenv('OPENAI_API_KEY'), 
+        'gemini' :  os.getenv('GEMINI_API_KEY') }
+    
+    LLM_API_KEY = os.getenv('LLM_API_KEY',"") or API_KEYS[LLM_PROVIDER]
+    
+    # Default models fallback (if not specified in .env)
+    LLM_MODELS = {
+        'mistral': {
+            'chat': os.getenv('MISTRAL_CHAT_MODEL', 'mistral-small'),
+            'embed': os.getenv('MISTRAL_EMBED_MODEL', 'mistral-embed')
+        },
+        'openai': {
+            'chat': os.getenv('OPENAI_CHAT_MODEL', 'gpt-4o-mini'),
+            'embed': os.getenv('OPENAI_EMBED_MODEL', 'text-embedding-3-small')
+        },
+        'gemini': {
+            'chat': os.getenv('GEMINI_CHAT_MODEL', 'gemini-1.5-flash'),
+            'embed': os.getenv('GEMINI_EMBED_MODEL', 'models/embedding-001')
+        }
+    }
+    
+    # Models per provider
+    LLM_CHAT_MODEL = os.getenv('LLM_CHAT_MODEL') or LLM_MODELS[LLM_PROVIDER]['chat']
+    LLM_EMBED_MODEL = os.getenv('LLM_EMBED_MODEL') or LLM_MODELS[LLM_PROVIDER]['embed']
+    
+    # Temperature for generation (0.0 = deterministic, 1.0 = random)
+    LLM_TEMPERATURE = float(os.getenv('LLM_TEMPERATURE', '0.7'))
+
     # ============= DATA PARAMETERS =============
     # Geographic region for filtering
     REGION = os.getenv("RAG_REGION", "Occitanie")
@@ -81,6 +114,16 @@ class Config:
     
     
     # ============= METHODS =============
+    
+        # Get models from config
+    @classmethod
+    def get_chat_model(cls):
+        return cls.LLM_CHAT_MODEL or cls.LLM_MODELS[cls.LLM_PROVIDER]['chat']
+    
+    @classmethod
+    def get_embed_model(cls):
+        return cls.LLM_EMBED_MODEL or cls.LLM_MODELS[cls.LLM_PROVIDER]['embed']
+    
     
     @classmethod
     def set_environment(cls, env: Environment) -> None:

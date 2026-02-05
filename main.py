@@ -5,7 +5,6 @@ from datetime import datetime
 from src.rag.rag_engine import RAGEngine
 from src.utils.token_accounting import get_accounting
 from src.utils.utils import flat_date_constraints
-from src.api.app import app
 import uvicorn
 from config import Config
 
@@ -60,6 +59,7 @@ def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
 
 def api_server(host: str = "0.0.0.0", port: int = 8000):
     """Start API server"""
+    from src.api.app import app
     try:
         logger.info(f"Starting API server on {host}:{port}")
         logger.info(f"Open http://localhost:{port}/ in your browser")

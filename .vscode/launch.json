@@ -13,7 +13,20 @@
             "console": "integratedTerminal",
             "args": [
                 "--max-pages",
-                "100"
+                "1",
+
+            ],
+        },
+        {
+            "name": "Vectorize data",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/run_full_pipeline.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--vectorize-only",
+                "--snapshot-date",
+                "2026-02-05"
             ],
         },
         {
@@ -25,9 +38,9 @@
             "args": [
                 "search",
                 "--question",
-                "Je cherche des des choses à faire ce week-end dans l'Hérault",
+                "Je cherche des evenements sur l'emploi la semaine prochaine",
                 "--date",
-                "2026-01-31"
+                "2026-02-03"
             ],
         },
         {

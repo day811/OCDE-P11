@@ -3,6 +3,7 @@ sources/*
 *.parquet
 data/*
 ~lock.*
+chunks.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

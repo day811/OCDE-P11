@@ -107,10 +107,8 @@ class PipelineOrchestrator:
         """NOUVEAU : Vectoriser + Indexer dans Faiss"""
         print("\n[STEP 3] Vectorizing and indexing with Faiss...")
         try:
-            vectorizer = EventVectorizer(
-                model_name="mistral-embed",
-                api_key=Config.MISTRAL_API_KEY
-            )
+            vectorizer = EventVectorizer()
+            
             index_path, metadata_path = vectorizer.run_full_vectorization_pipeline(
                 processed_path= self.processed_path,
                 snapshot_date=self.snapshot_date,

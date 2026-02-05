@@ -11,6 +11,7 @@ from src.rag.query_parser import QueryParser
 from src.rag.retriever import RAGRetriever
 from src.utils.token_accounting import get_accounting
 from config import Config
+from src.llm.factory import get_llm
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,17 @@ class RAGEngine:
     """Orchestrates RAG pipeline: parsing -> retrieval -> context -> LLM"""
     
     def __init__(self, snapshot_date: Optional[str] = None, environment: str = 'prod'):
-        """Initialize RAG Engine"""
+        self.snapshot_date = snapshot_date or datetime.now().strftime('%Y-%m-%d')
+        self.environment = environment
+        
+        # ✅ INITIALIZE LLM FROM CONFIG
+        self.llm = get_llm(
+            provider=Config.LLM_PROVIDER,
+            chat_model=Config.get_chat_model(),
+            embed_model=Config.get_embed_model(),
+            temperature=Config.LLM_TEMPERATURE
+        )
+            
         
         self.snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
         self.environment = environment
@@ -38,27 +49,14 @@ class RAGEngine:
         self.retriever = RAGRetriever(
             faiss_index=self.faiss_index,
             metadata=self.metadata,
-            embed_function=self._embed_query
+            embed_function=self.embed_query
         )
         
-        # Initialize Mistral LLM
-        from mistralai import Mistral, UserMessage
-        self.llm = Mistral(api_key=Config.MISTRAL_API_KEY)
     
-    def _embed_query(self, query_text: str):
-        """Embed query using Mistral"""
-        from src.vector.vectorization import EventVectorizer
+    def embed_query(self, query_text: str) -> list:
+        """Embed query using LLM"""
+        return self.llm.embed(query_text)
         
-        vectorizer = EventVectorizer(
-            model_name="mistral-embed",
-            api_key=Config.MISTRAL_API_KEY
-        )
-        embeddings = vectorizer.vectorize_chunks(
-            [{'chunk_id': 0, 'event_id': 'query', 'text': query_text}],
-            batch_size=1
-        )
-        return embeddings[0].tolist()
-    
     
     def build_context(self,chunks: list[Dict], constraints:dict) -> str:
         """Build formatted context from chunks"""
@@ -99,14 +97,15 @@ class RAGEngine:
         self,
         question: str,
         top_k: int = 5,
-        snapshot_date: Optional[str] = None
+        snapshot_date: Optional[str] = None,
+        temperature: float = 0.7
     ) -> Dict:
         """Answer a question using RAG"""
         start_time = time.time()
         
         try:
             # Step 1: Parse constraints
-            constraints = self.query_parser.parse_constraints(question)
+            constraints = self.query_parser.parse_constraints(question, snapshot_date = self.snapshot_date)
             accounting = get_accounting()
            
             # Step 2: Retrieve chunks
@@ -124,7 +123,7 @@ class RAGEngine:
             
             # Step 4: Generate answer with LLM
             prompt = self._build_prompt(question, context)
-            answer = self._generate_answer(prompt)
+            answer = self._generate_answer(prompt,temperature = temperature)
 
             # Step 5: Format response
             sources = []
@@ -184,19 +183,11 @@ Question: {question}
 
 Basé sur le contexte, fournis une réponse concise recommandant les événements pertinents."""
     
-    def _generate_answer(self, prompt: str) -> str:
+    def _generate_answer(self, prompt: str, temperature: float = 0.7) -> str:
         """Generate answer using LLM"""
         try:
-            llm_response = self.llm.chat.complete(
-                model="mistral-small",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
-            )
-            return llm_response.choices[0].message.content # type: ignore
+            return self.llm.generate(prompt, temperature=temperature)
+
         except Exception as e:
             logger.error(f"LLM generation error: {e}")
             return "Désolé, je n'ai pas pu générer une réponse."

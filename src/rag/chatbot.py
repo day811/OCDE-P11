@@ -7,6 +7,7 @@ from src.rag.retriever import RAGRetriever
 from config import Config
 from src.rag.query_parser import QueryParser
 from src.utils.token_accounting import get_accounting
+from src.llm.factory import get_llm
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,13 +15,18 @@ logger = logging.getLogger(__name__)
 class ChatBot:
     """Chatbot for event recommendations"""
     
-    def __init__(self, snapshot_date=Config.DEV_SNAPSHOT_DATE, mode: str = 'CLI'):
+    def __init__(self, snapshot_date=Config.DEV_SNAPSHOT_DATE, mode: str = 'CLI', llm = None):
         import faiss
         import json
         from pathlib import Path
 
+        self.snapshot_date = snapshot_date
         # Load Faiss index and metadata
         
+        self.llm = llm or get_llm(
+            provider=Config.LLM_PROVIDER,
+            embed_model=Config.get_embed_model())
+ 
         index_path = Config.get_index_path(snapshot_date)
         metadata_path = Config.get_metadata_path(snapshot_date)
         
@@ -43,7 +49,7 @@ class ChatBot:
         self.rag = LangChainRAG(
             rag_retriever=self.retriever,
             query_parser=self.query_parser,
-            mistral_api_key=Config.MISTRAL_API_KEY
+            mistral_api_key=Config.LLM_API_KEY
         )
         
         logger.info("ChatBot initialized with LangChain RAG")
@@ -52,15 +58,8 @@ class ChatBot:
         """Embed query using Mistral"""
         from src.vector.vectorization import EventVectorizer
         
-        vectorizer = EventVectorizer(
-            model_name='mistral-embed',
-            api_key=Config.MISTRAL_API_KEY
-        )
         
-        embeddings = vectorizer.vectorize_chunks(
-            [{'chunk_id': 0, 'event_id': 'query', 'text': query_text}],
-            batch_size=1
-        )
+        embeddings = self.llm.embed(query_text)
         
         return embeddings[0].tolist()
     
@@ -68,7 +67,7 @@ class ChatBot:
         """Process user question through LangChain RAG"""
         logger.info(f"User question: {user_question}")
         
-        result = self.rag.answer(user_question)
+        result = self.rag.answer(user_question, self.snapshot_date)
         
 
         return {
