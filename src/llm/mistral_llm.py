@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Union
 from src.llm.base import BaseLLM
 from mistralai import Mistral
 import logging
@@ -22,11 +22,19 @@ class MistralLLM(BaseLLM):
         content = response.choices[0].message.content
         return str(content) if content else "" 
     
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text) :
         """Generate embeddings using Mistral embed API"""
-        list_lext = [text] if isinstance(text, str) else text
-        response = self.client.embeddings.create(
-            model=self.embed_model,
-            inputs=list_lext
-        )
-        return response.data[0].embedding or []
+        if isinstance(text, list):
+            # Multiple texts → return list of embeddings
+            response = self.client.embeddings.create(
+                model=self.embed_model,
+                inputs=text
+            )
+            return [embed.embedding for embed in response.data]
+        else:
+            # Single text → return single embedding
+            response = self.client.embeddings.create(
+                model=self.embed_model,
+                inputs=[text]
+            )
+            return response.data[0].embedding
