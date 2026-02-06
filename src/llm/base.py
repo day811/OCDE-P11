@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List
 
 class BaseLLM(ABC):
     """Abstract base class for LLM providers"""
@@ -15,6 +14,6 @@ class BaseLLM(ABC):
         pass
     
     @abstractmethod
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text) :
         """Generate embedding for text"""
-        pass
+        return text
