@@ -75,11 +75,11 @@ class SearchEngine:
             
             # Calculate execution time
             execution_time = (datetime.now() - query_start).total_seconds()
-            result['execution_time'] = execution_time
+            result['execution_time'] = execution_time # type: ignore
             
-            logger.info(f"Query completed in {execution_time:.3f}s | Tokens: {result.get('total_tokens', 0)}")
+            logger.info(f"Query completed in {execution_time:.3f}s | Tokens: {result.get('total_tokens', 0)}") # type: ignore
             
-            return result
+            return result # type: ignore
         
         except Exception as e:
             logger.error(f"Query failed: {e}", exc_info=True)
@@ -91,7 +91,7 @@ class SearchEngine:
         
         logger.debug(f"Handling search query: {question}")
         
-        result = self.engine.answer_question(
+        result = self.engine.answer_question( # type: ignore
             question=question,
             top_k=top_k,
             snapshot_date=self.snapshot_date
@@ -112,7 +112,7 @@ class SearchEngine:
         
         logger.debug(f"Handling chat query: {question}")
         
-        result = self.engine.chat(
+        result = self.engine.chat( # type: ignore
             user_question=question,
             top_k=top_k,
             temperature=temperature

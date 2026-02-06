@@ -5,7 +5,6 @@ from datetime import datetime
 from src.rag.rag_engine import RAGEngine
 from src.utils.token_accounting import get_accounting
 from src.utils.utils import flat_date_constraints
-import uvicorn
 from config import Config
 
 logging.basicConfig(
@@ -109,10 +108,6 @@ def main():
     
     if args.command == "search":
         search_cli(question=args.question, top_k=args.top_k, snapshot_date=args.date)
-    elif args.command == "api":
-        api_server(host=args.host, port=args.port)
-    elif args.command == 'chat':
-        chat_interactive(snapshot_date=args.date)
     else:
         info()
 
