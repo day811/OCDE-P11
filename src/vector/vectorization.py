@@ -133,7 +133,7 @@ class EventVectorizer:
                 logger.debug(f"Batch {batch_idx + 1}/{num_batches}: Vectorizing chunks {start_idx}-{end_idx}...")
                 
                 # Call LLM API for this batch
-                batch_embeddings = self.llm.embed(batch_texts)  # Passe la liste entière
+                batch_embeddings = self.llm.embed(batch_texts)  # Pass the entire list
                 batch_embeddings = np.array(batch_embeddings).astype(np.float32)
                 all_embeddings.append(batch_embeddings)
                
@@ -183,7 +183,7 @@ class EventVectorizer:
         """
         Créer un index Faiss optimisé.
         """
-        dimension = embeddings.shape[1]  # 1024 pour Mistral
+        dimension = embeddings.shape[1]  
         
         # IVF : optimisé pour medium-sized datasets
         nlist = min(100, max(10, n_vectors // 100))
