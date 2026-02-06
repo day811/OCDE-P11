@@ -56,14 +56,11 @@ class ChatBot:
     
     def _embed_query(self, query_text: str):
         """Embed query using Mistral"""
-        from src.vector.vectorization import EventVectorizer
         
+        return self.llm.embed(query_text)
         
-        embeddings = self.llm.embed(query_text)
-        
-        return embeddings[0].tolist()
-    
-    def chat(self, user_question: str) -> dict:
+   
+    def chat(self, user_question: str, top_k: int = 5, temperature: float = 0.7,) -> dict:
         """Process user question through LangChain RAG"""
         logger.info(f"User question: {user_question}")
         
