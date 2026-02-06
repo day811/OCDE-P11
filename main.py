@@ -57,29 +57,6 @@ def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
         logger.error(f"Error: {e}")
         exit(1)
 
-def api_server(host: str = "0.0.0.0", port: int = 8000):
-    """Start API server"""
-    from src.api.app import app
-    try:
-        logger.info(f"Starting API server on {host}:{port}")
-        logger.info(f"Open http://localhost:{port}/ in your browser")
-        uvicorn.run(app, host=host, port=port)
-    except Exception as e:
-        logger.error(f"Error starting server: {e}")
-        exit(1)
-
-def chat_interactive(snapshot_date: str = ""):
-    """Start interactive chat session"""
-    from src.rag.chatbot import ChatBot
-    try:
-        bot = ChatBot(snapshot_date=snapshot_date, mode = 'CLI')
-        bot.interactive_session()
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        exit(1)
-
-
-
 def info():
     """Show info about available commands"""
     print("""
