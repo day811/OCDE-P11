@@ -44,27 +44,16 @@
             ],
         },
         {
-            "name": "Chat CLI",
+            "name": "Streamlit Debug",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
+            "module": "streamlit",
+            "args": ["run", "main_stream.py"],
+            "jinja": true,
+            "justMyCode": true,
             "console": "integratedTerminal",
-            "args": [
-                "chat",
-                "--date",
-                "2026-01-31"
-            ],
-        },
-       {
-            "name": "Chat UI",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/main.py",
-            "console": "integratedTerminal",
-            "args": [
-                "api"
-            ],
-        },
+            "cwd": "${workspaceFolder}"
+        }
 
     ]
 }
