@@ -46,20 +46,9 @@ def render_advanced_filters() -> Dict:
                 key="temperature_slider"
             )
         
-        with col3:
-            chunk_size = st.number_input(
-                "Taille chunks",
-                min_value=100,
-                max_value=2000,
-                value=500,
-                step=100,
-                key="chunk_size_input"
-            )
-    
     return {
         'top_k': top_k,
         'temperature': temperature,
-        'chunk_size': chunk_size
     }
 
 
