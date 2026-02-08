@@ -7,30 +7,33 @@ from src.utils.utils import normalize_str, flat_date_constraints
 class RAGRetriever:
     """Retrieve and filter chunks from Faiss index"""
     
-    def __init__(self, faiss_index, metadata: Dict, embed_function: Callable):
+    def __init__(self, faiss_index, metadata: Dict, embed_function: Callable, top_k:int = 5):
         """Initialize retriever"""
         self.faiss_index = faiss_index
         self.metadata = metadata
         self.embed_function = embed_function
+        self.top_k = top_k
     
 
     def retrieve(
         self,
         query_text: str,
-        k: int = 5,
+        k: int = 0,
         date_constraint: Optional[tuple[datetime,int]] = None,
         city_constraint: Optional[str] = None,
         dept_constraint: Optional[str] = None,
     ) -> List[Dict]:
         """Retrieve and filter chunks"""
         
+        if k == 0:
+            k = self.top_k
         # Embed query
         query_text += flat_date_constraints(date_constraint)
         query_embedding = self.embed_function(query_text)
         query_vector = np.array([query_embedding], dtype=np.float32)
         
         # Search Faiss
-        search_k = k * 50
+        search_k = min(k * 70,500)
         distances, indices = self.faiss_index.search(query_vector, search_k)
         
         # Build results with distances
