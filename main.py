@@ -122,11 +122,10 @@ selected_label = st.sidebar.selectbox(
 snapshot_date = date_options[labels.index(selected_label)]
 
 # ✅ CALLBACK: Réinitialiser au changement de date
-if llm_provider != st.session_state.get('previous_llm', "") or \
-   snapshot_date != st.session_state.get('previous_snapshot_date', ""):
+if llm_provider != st.session_state.get('previous_llm', "") :
    
     Config.LLM_PROVIDER = llm_provider
-    logger.info(f"Changing SeekEngine to {llm_provider}/{snapshot_date})")
+    logger.info(f"Changing SeekEngine to {llm_provider})")
     
     # Réinitialiser les engines
     if 'search_engine' in st.session_state:
