@@ -25,9 +25,6 @@ class RAGEngine:
         
         # ✅ INITIALIZE LLM FROM CONFIG
         self.llm = get_llm(
-            provider=Config.LLM_PROVIDER,
-            chat_model=Config.get_chat_model(),
-            embed_model=Config.get_embed_model(),
             temperature=Config.LLM_TEMPERATURE
         )
             
@@ -97,7 +94,6 @@ class RAGEngine:
         self,
         question: str,
         top_k: int = 5,
-        snapshot_date: Optional[str] = None,
         temperature: float = 0.7
     ) -> Dict:
         """Answer a question using RAG"""
@@ -111,7 +107,7 @@ class RAGEngine:
             # Step 2: Retrieve chunks
             chunks = self.retriever.retrieve(
                 query_text=question,
-                k=top_k * 2,
+                k=top_k,
                 date_constraint=constraints['date'],
                 city_constraint=constraints['city'],
                 dept_constraint=constraints['dept'],
@@ -130,7 +126,7 @@ class RAGEngine:
             for chunk in chunks:
                 dates = self.retriever._matches_date(chunk, constraints['date'],only_first=False)
                 dates = " et ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
-                sources .append(
+                sources.append(
                     {
                         'event_id': chunk.get('event_id'),
                         'title': chunk.get('title'),
