@@ -272,7 +272,7 @@ class TestFaissIndexing(unittest.TestCase):
         
         # Search with a test query
         query = self.test_embeddings[0:1]  # First embedding as query
-        distances, indices = index.search(query, k=5)
+        distances, indices = index.search(query, k=5) # type: ignore
         
         self.assertEqual(indices.shape, (1, 5), "Should return 5 results")
         self.assertEqual(distances.shape, (1, 5), "Should return 5 distances")
@@ -339,7 +339,7 @@ class TestMetadataSaving(unittest.TestCase):
             
             # Mock the Config method
             original_method = Config.get_metadata_path
-            Config.get_metadata_path = lambda x: str(metadata_path)
+            Config.get_metadata_path = lambda x: str(metadata_path) # type: ignore
             
             try:
                 self.vectorizer.save_metadata(
@@ -361,7 +361,7 @@ class TestMetadataSaving(unittest.TestCase):
             metadata_path = Path(tmpdir) / "metadata.json"
             
             original_method = Config.get_metadata_path
-            Config.get_metadata_path = lambda x: str(metadata_path)
+            Config.get_metadata_path = lambda x: str(metadata_path)# type: ignore
             
             try:
                 self.vectorizer.save_metadata(
@@ -393,7 +393,7 @@ class TestMetadataSaving(unittest.TestCase):
             metadata_path = Path(tmpdir) / "metadata.json"
             
             original_method = Config.get_metadata_path
-            Config.get_metadata_path = lambda x: str(metadata_path)
+            Config.get_metadata_path = lambda x: str(metadata_path)# type: ignore
             
             try:
                 self.vectorizer.save_metadata(
@@ -438,8 +438,6 @@ class TestIndexSaving(unittest.TestCase):
     def setUpClass(cls):
         """Set up test data"""
         cls.vectorizer = EventVectorizer(
-            model_name="mistral-embed",
-            api_key=Config.LLM_API_KEY
         )
         
         # Create test embeddings
@@ -457,7 +455,7 @@ class TestIndexSaving(unittest.TestCase):
             index_path = Path(tmpdir) / "index.faiss"
             
             original_method = Config.get_index_path
-            Config.get_index_path = lambda x: str(index_path)
+            Config.get_index_path = lambda x: str(index_path)# type: ignore
             
             try:
                 self.vectorizer.save_index(self.index, datetime.now().strftime("%Y-%m-%d"))
@@ -477,7 +475,7 @@ class TestIndexSaving(unittest.TestCase):
             index_path = Path(tmpdir) / "index.faiss"
             
             original_method = Config.get_index_path
-            Config.get_index_path = lambda x: str(index_path)
+            Config.get_index_path = lambda x: str(index_path)# type: ignore
             
             try:
                 self.vectorizer.save_index(self.index, datetime.now().strftime("%Y-%m-%d"))
