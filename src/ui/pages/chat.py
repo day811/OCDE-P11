@@ -5,8 +5,8 @@ Chat page - Interactive chat with LangChain
 
 import streamlit as st
 import logging
-from src.core.search_engine import SearchEngine
-from src.ui.components import render_no_index_error, render_error
+from src.core.seek_engine import SeekEngine
+from src.ui.components import render_no_index_error, render_advanced_filters, render_error
 from pathlib import Path
 from config import Config
 
@@ -39,7 +39,7 @@ def render(snapshot_date: str = ""):
     # Initialize ChatEngine
     if st.session_state.chat_engine is None:
         try:
-            st.session_state.chat_engine = SearchEngine(
+            st.session_state.chat_engine = SeekEngine(
                 snapshot_date=snapshot_date,
                 mode='chat'
             )
@@ -76,6 +76,8 @@ def render(snapshot_date: str = ""):
             st.session_state.messages = []
             st.rerun()
     
+    filters = render_advanced_filters()
+
     # ✅ VÉRIFIER UNIQUEMENT LE BOUTON, PAS LE TEXTE!
     if send_button:
         st.session_state.should_submit_message = True
@@ -105,6 +107,8 @@ def render(snapshot_date: str = ""):
                 
                 result = st.session_state.chat_engine.query(
                     question=user_input,
+                    top_k=filters['top_k'],
+                    temperature=filters['temperature'] 
                 )
                 
                 logger.debug(f"[chat.render] Query successful, answer length: {len(result.get('answer', ''))}")

@@ -15,42 +15,18 @@ logger = logging.getLogger(__name__)
 class ChatBot:
     """Chatbot for event recommendations"""
     
-    def __init__(self, snapshot_date=Config.DEV_SNAPSHOT_DATE, mode: str = 'CLI', llm = None):
-        import faiss
-        import json
+    def __init__(self, snapshot_date=Config.DEV_SNAPSHOT_DATE):
+#        import faiss
+#        import json
         from pathlib import Path
 
         self.snapshot_date = snapshot_date
         # Load Faiss index and metadata
         
-        self.llm = llm or get_llm(
-            provider=Config.LLM_PROVIDER,
-            embed_model=Config.get_embed_model())
+        self.llm = get_llm()
  
-        index_path = Config.get_index_path(snapshot_date)
-        metadata_path = Config.get_metadata_path(snapshot_date)
-        
-        self.faiss_index = faiss.read_index(index_path)
-        
-        with open(metadata_path, 'r', encoding='utf-8') as f:
-            self.metadata = json.load(f)
-        
-        # Initialize components
-        self.query_parser = QueryParser()
-        self.retriever = RAGRetriever(
-            faiss_index=self.faiss_index,
-            metadata=self.metadata,
-            embed_function=self._embed_query
-        )
-        
-        output_format = "HTML" if mode == "UI" else "Markdown"
-        
         # Initialize LangChain RAG
-        self.rag = LangChainRAG(
-            rag_retriever=self.retriever,
-            query_parser=self.query_parser,
-            mistral_api_key=Config.LLM_API_KEY
-        )
+        self.rag = LangChainRAG(embed_function= self._embed_query )
         
         logger.info("ChatBot initialized with LangChain RAG")
     
@@ -60,11 +36,11 @@ class ChatBot:
         return self.llm.embed(query_text)
         
    
-    def chat(self, user_question: str, top_k: int = 5, temperature: float = 0.7,) -> dict:
+    def chat(self, user_question: str, top_k: int = 5, temperature: float = 0.7) -> dict:
         """Process user question through LangChain RAG"""
         logger.info(f"User question: {user_question}")
         
-        result = self.rag.answer(user_question, self.snapshot_date)
+        result = self.rag.answer(user_question, top_k=top_k, temperature=temperature)
         
 
         return {
@@ -75,37 +51,3 @@ class ChatBot:
             'total_tokens': result['total_tokens']
         }
     
-    def interactive_session(self):
-        """Run interactive chat session"""
-        print("\n" + "="*80)
-        print("CHATBOT ÉVÉNEMENTS CULTURELS - Tapez 'quit' pour quitter")
-        print("="*80 + "\n")
-        
-        while True:
-            try:
-                question = input("Vous: ").strip()
-                
-                if question.lower() in ['quit', 'exit', 'q']:
-                    print("Au revoir!")
-                    break
-                
-                if not question:
-                    continue
-                
-                result = self.chat(question)
-                
-                print(f"\nBot: {result['answer']}\n")
-                
-                if result['sources']:
-                    print(f"Sources ({len(result['sources'])}):")
-                    for doc in result['sources']:
-                        print(f"  - {doc.metadata.get('source', 'N/A')}")
-                
-                print("-" * 80 + "\n")
-                
-            except KeyboardInterrupt:
-                print("\nSession fermée.")
-                break
-            except Exception as e:
-                logger.error(f"Error: {e}")
-                print(f"Erreur: {e}\n")
