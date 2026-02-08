@@ -2,13 +2,16 @@ from typing import List, Union
 from src.llm.base import BaseLLM
 from mistralai import Mistral
 import logging
+from config import Config
 
 logger = logging.getLogger(__name__)
 
 class MistralLLM(BaseLLM):
-    def __init__(self, api_key: str, chat_model: str = "", embed_model: str = "", temperature: float = 0.7):
-        super().__init__(chat_model or "mistral-small", embed_model or "mistral-embed", temperature)
-        self.client = Mistral(api_key=api_key)
+    def __init__(self, temperature: float = 0.7):
+
+        super().__init__(Config.get_chat_model() , Config.get_embed_model() , temperature)
+
+        self.client = Mistral(api_key=Config.get_api_key())
         logger.info(f"MistralLLM initialized - Chat: {self.chat_model}, Embed: {self.embed_model}, Temp: {self.temperature}")
     
     def generate(self, prompt: str, temperature: float = 0.7) -> str:
