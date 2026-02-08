@@ -21,9 +21,6 @@ logger = logging.getLogger(__name__)
 class OpenAgendaFetcher:
     """Fetch events from Open Agenda API"""
     
-    # Open Agenda API endpoint (free, no auth required)
-    BASE_URL = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/evenements-publics-openagenda/records/"
-    
     # API parameters
     TIMEOUT = 10  # seconds
     MAX_RETRIES = 3
@@ -65,7 +62,7 @@ class OpenAgendaFetcher:
        }
         
         query_string = urlencode(params)
-        return f"{self.BASE_URL}?{query_string}"
+        return f"{Config.BASE_URL}?{query_string}"
     
     def fetch_page(self, page: int = 1, limit: int = 100) -> List[Dict[str, Any]]:
         """

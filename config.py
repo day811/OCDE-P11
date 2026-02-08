@@ -22,6 +22,10 @@ class Environment(Enum):
 
 
 class Config:
+
+    # Open Agenda API endpoint (free, no auth required)
+    BASE_URL = "https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/evenements-publics-openagenda/records/"
+
     """Manage snapshot versions and index selection"""
     
     # ============= PATHS =============
@@ -45,16 +49,21 @@ class Config:
     
 # ==================== LLM CONFIGURATION ====================
     
+    LLM_MISTRAL = "mistral"
+    LLM_OPENAI = "openai"
+    LLM_GEMINI = "gemini"
+    
+    
     # Provider: 'mistral', 'openai', 'gemini'
     LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'mistral')
     
     # API Keys
     API_KEYS = { 
-        'mistral' : os.getenv('MISTRAL_API_KEY') ,
-        'openai' :  os.getenv('OPENAI_API_KEY'), 
-        'gemini' :  os.getenv('GEMINI_API_KEY') }
+        LLM_MISTRAL : os.getenv('MISTRAL_API_KEY','') ,
+        LLM_OPENAI :  os.getenv('OPENAI_API_KEY',''), 
+        LLM_GEMINI :  os.getenv('GEMINI_API_KEY','') }
     
-    LLM_API_KEY = os.getenv('LLM_API_KEY',"") or API_KEYS[LLM_PROVIDER]
+    ALL_LLM = [LLM_MISTRAL, LLM_OPENAI, LLM_GEMINI]
     
     # Default models fallback (if not specified in .env)
     LLM_MODELS = {
@@ -115,14 +124,18 @@ class Config:
     
     # ============= METHODS =============
     
+    @classmethod
+    def get_api_key(cls):
+        return cls.API_KEYS[cls.LLM_PROVIDER] 
         # Get models from config
+
     @classmethod
     def get_chat_model(cls):
-        return cls.LLM_CHAT_MODEL or cls.LLM_MODELS[cls.LLM_PROVIDER]['chat']
+        return cls.LLM_MODELS[cls.LLM_PROVIDER]['chat']
     
     @classmethod
     def get_embed_model(cls):
-        return cls.LLM_EMBED_MODEL or cls.LLM_MODELS[cls.LLM_PROVIDER]['embed']
+        return cls.LLM_MODELS[cls.LLM_PROVIDER]['embed']
     
     
     @classmethod
@@ -224,6 +237,32 @@ class Config:
             print(f"  {idx}. {snapshot_date}  ({file_size_mb:.1f} MB)  {marker_str}")
         
         print("="*70 + "\n")
+    
+    @classmethod
+    def get_available_index_dates(cls):
+        """Get all available snapshots dates"""
+        
+        index_files = sorted(cls.INDEXES_DIR.glob("faiss_index_*.bin"))
+        
+        if not index_files:
+            print("  ❌ No indexes found. Run pipeline first.")
+            print("="*70 + "\n")
+            return []
+        
+        result = []
+        for idx, fpath in enumerate(index_files, 1):
+            snapshot_date = fpath.stem.replace("faiss_index_", "")
+            file_size_mb = fpath.stat().st_size / (1024 * 1024)
+            
+            # Check if this is development or latest
+            markers = ""
+            if idx == len(index_files):
+                markers= "⭐ LATEST"
+            if snapshot_date == cls.DEV_SNAPSHOT_DATE:
+                markers= "🔒 DEV"
+            
+            result.append({snapshot_date: (markers,file_size_mb)})
+        return result    
     
     @classmethod
     def get_raw_snapshot_path(cls, snapshot_date: str = "") -> str:
