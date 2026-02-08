@@ -15,7 +15,7 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 
-class SearchEngine:
+class SeekEngine:
     """
     Interface unifiée pour recherche et chat.
     Abstrait les détails d'implémentation de RAGEngine et ChatBot.
@@ -23,7 +23,7 @@ class SearchEngine:
     
     def __init__(self, snapshot_date: str = "", mode: str = 'search'):
         """
-        Initialize SearchEngine.
+        Initialize SeekEngine.
         
         Args:
             snapshot_date: Date du snapshot (YYYY-MM-DD). Default: Config.DEV_SNAPSHOT_DATE
@@ -33,18 +33,23 @@ class SearchEngine:
         self.mode = mode
         self.start_time = datetime.now()
         
-        logger.info(f"Initializing SearchEngine (mode={mode}, snapshot={self.snapshot_date})")
+        logger.info(f"Initializing SeekEngine (mode={mode}, snapshot={self.snapshot_date})")
+        self.load_engine(snapshot_date=snapshot_date)
         
+    
+    def load_engine(self, snapshot_date: str = ""):
+
         try:
-            if mode == 'search':
-                self.engine = RAGEngine(snapshot_date=self.snapshot_date)
-            elif mode == 'chat':
-                self.engine = ChatBot(snapshot_date=self.snapshot_date)
+            if self.mode == 'search':
+                self.engine = RAGEngine(snapshot_date=snapshot_date)
+            elif self.mode == 'chat':
+                self.engine = ChatBot(snapshot_date=snapshot_date)
             else:
-                raise ValueError(f"Invalid mode: {mode}. Use 'search' or 'chat'.")
+                raise ValueError(f"Invalid mode: {self.mode}. Use 'search' or 'chat'.")
         except Exception as e:
             logger.error(f"Failed to initialize engine: {e}")
             raise
+    
     
     def query(self, question: str, top_k: int = 5, 
               temperature: float = 0.7) -> Dict:
@@ -94,7 +99,6 @@ class SearchEngine:
         result = self.engine.answer_question( # type: ignore
             question=question,
             top_k=top_k,
-            snapshot_date=self.snapshot_date
         )
         
         return {

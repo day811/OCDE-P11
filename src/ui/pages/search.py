@@ -5,7 +5,7 @@ Search page - Simple RAG search interface
 
 import streamlit as st
 import logging
-from src.core.search_engine import SearchEngine
+from src.core.seek_engine import SeekEngine
 from src.ui.components import (
     render_question_input,
     render_advanced_filters,
@@ -41,10 +41,10 @@ def render(snapshot_date: str = ""):
         render_no_index_error()
         return
     
-    # Initialize SearchEngine
+    # Initialize SeekEngine
     if st.session_state.search_engine is None:
         try:
-            st.session_state.search_engine = SearchEngine(
+            st.session_state.search_engine = SeekEngine(
                 snapshot_date=snapshot_date,
                 mode='search'
             )
