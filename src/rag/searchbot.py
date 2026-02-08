@@ -43,7 +43,7 @@ class SearchBot:
         
         # Initialize components
         self.query_parser = QueryParser
-        self.retriever = RAGEngine(
+        self.engine = RAGEngine(
             faiss_index=self.faiss_index,
             metadata=self.metadata,
             embed_function=self.embed_query
@@ -55,41 +55,6 @@ class SearchBot:
         return self.llm.embed(query_text)
         
     
-    def build_context(self,chunks: list[Dict], constraints:dict) -> str:
-        """Build formatted context from chunks"""
-        if not chunks:
-            return "Aucun événement n'a été trouvé pour votre recherche."
-        
-        context = "Voici les événements pertinents trouvés :\n\n"
-        
-        for i, chunk in enumerate(chunks, 1):
-            title = chunk.get('title', 'Sans titre')
-            city = chunk.get('city', 'Lieu non spécifié')
-            dates = self.retriever._matches_date(chunk, constraints['date'],only_first=False)
-            dates = " + ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
-            text = chunk.get('text', 'Description non disponible')
-            url = chunk.get('url', '')
-            distance = chunk.get('distance')
-            
-            context += f"{i}. **{title}**\n"
-            context += f"   📍 Lieu: {city}\n"
-            context += f"   📅 Dates: {dates}\n"
-            
-            if distance:
-                relevance = int(distance * 100)
-                context += f"   ⭐ Pertinence: {relevance}%\n"
-            
-            context += f"\n   {text}\n"
-            
-            if url:
-                context += f"   🔗 {url}\n"
-            
-            context += "\n"
-        
-        return context
-
-
-
     def answer_question(
         self,
         question: str,
@@ -105,7 +70,7 @@ class SearchBot:
             accounting = get_accounting()
            
             # Step 2: Retrieve chunks
-            chunks = self.retriever.retrieve(
+            chunks = self.engine.retrieve(
                 query_text=question,
                 k=top_k,
                 date_constraint=constraints['date'],
@@ -115,7 +80,7 @@ class SearchBot:
             chunks = chunks[:top_k]
             
             # Step 3: Build context
-            context = self.build_context(chunks, constraints)
+            context = self.engine.build_context(chunks, constraints)
             
             # Step 4: Generate answer with LLM
             prompt = self._build_prompt(question, context)
@@ -124,7 +89,7 @@ class SearchBot:
             # Step 5: Format response
             sources = []
             for chunk in chunks:
-                dates = self.retriever._matches_date(chunk, constraints['date'],only_first=False)
+                dates = self.engine._matches_date(chunk, constraints['date'],only_first=False)
                 dates = " et ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
                 sources.append(
                     {

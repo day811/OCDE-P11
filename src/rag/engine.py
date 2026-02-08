@@ -125,3 +125,36 @@ class RAGEngine:
         except:
             return False
 
+    def build_context(self,chunks: list[Dict], constraints:dict) -> str:
+        """Build formatted context from chunks"""
+        if not chunks:
+            return "Aucun événement n'a été trouvé pour votre recherche."
+        
+        context = "Voici les événements pertinents trouvés :\n\n"
+        
+        for i, chunk in enumerate(chunks, 1):
+            title = chunk.get('title', 'Sans titre')
+            city = chunk.get('city', 'Lieu non spécifié')
+            dates = self._matches_date(chunk, constraints['date'],only_first=False)
+            dates = " + ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
+            text = chunk.get('text', 'Description non disponible')
+            url = chunk.get('url', '')
+            distance = chunk.get('distance')
+            
+            context += f"{i}. **{title}**\n"
+            context += f"   📍 Lieu: {city}\n"
+            context += f"   📅 Dates: {dates}\n"
+            
+            if distance:
+                relevance = int(distance * 100)
+                context += f"   ⭐ Pertinence: {relevance}%\n"
+            
+            context += f"\n   {text}\n"
+            
+            if url:
+                context += f"   🔗 {url}\n"
+            
+            context += "\n"
+        
+        return context
+

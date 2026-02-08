@@ -164,7 +164,7 @@ Sois concis et pertinent.
 
         total_tokens = 0
         try:
-            result = self.qa_chain({'query': question}) # type: ignore
+            result = self.qa_chain.invoke({'query': question}) # type: ignore
             
             # Estimate tokens (query embedding + context + generation)
             query_tokens = len(question.split()) * 1.3  # rough estimate
