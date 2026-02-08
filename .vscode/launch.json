@@ -9,7 +9,7 @@
             "name": "Fetch data",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/run_full_pipeline.py",
+            "program": "${workspaceFolder}/src/vector/run_full_pipeline.py",
             "console": "integratedTerminal",
             "args": [
                 "--max-pages",
@@ -21,7 +21,7 @@
             "name": "Vectorize data",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/run_full_pipeline.py",
+            "program": "${workspaceFolder}/src/vector/run_full_pipeline.py",
             "console": "integratedTerminal",
             "args": [
                 "--vectorize-only",
@@ -33,7 +33,7 @@
             "name": "Search CLI",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
+            "program": "${workspaceFolder}/cli.py",
             "console": "integratedTerminal",
             "args": [
                 "search",
@@ -48,7 +48,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "streamlit",
-            "args": ["run", "main_stream.py"],
+            "args": ["run", "main.py"],
             "jinja": true,
             "justMyCode": true,
             "console": "integratedTerminal",
