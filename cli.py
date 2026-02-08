@@ -2,7 +2,7 @@
 import argparse
 import logging
 from datetime import datetime
-from src.rag.rag_engine import RAGEngine
+from src.rag.searchbot import SearchBot
 from src.utils.token_accounting import get_accounting
 from src.utils.utils import flat_date_constraints
 from config import Config
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
     """CLI search command"""
     try:
-        engine = RAGEngine(snapshot_date=snapshot_date)
+        engine = SearchBot(snapshot_date=snapshot_date)
         result = engine.answer_question(question=question, top_k=top_k)
         
         print("\n" + "="*80)

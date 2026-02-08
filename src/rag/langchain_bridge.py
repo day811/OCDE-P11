@@ -9,7 +9,7 @@ from langchain_classic.chains import RetrievalQA
 from langchain_core.prompts import PromptTemplate
 from src.utils.token_accounting import get_accounting
 from src.llm.factory import get_langchain_llm
-from src.rag.retriever import RAGRetriever
+from src.rag.engine import RAGEngine
 from src.rag.query_parser import QueryParser
 
 from typing import List, Callable
@@ -135,7 +135,7 @@ Sois concis et pertinent.
         self.llm = get_langchain_llm(temperature)
         self.temperature=temperature
         
-        self.rag_retriever = RAGRetriever(
+        self.rag_retriever = RAGEngine(
             faiss_index=self.faiss_index,
             metadata=self.metadata,
             embed_function=self.embed_function,

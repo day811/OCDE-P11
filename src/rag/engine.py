@@ -4,7 +4,7 @@ from typing import List, Dict, Optional, Callable
 from datetime import datetime, timedelta
 from src.utils.utils import normalize_str, flat_date_constraints
 
-class RAGRetriever:
+class RAGEngine:
     """Retrieve and filter chunks from Faiss index"""
     
     def __init__(self, faiss_index, metadata: Dict, embed_function: Callable, top_k:int = 5):

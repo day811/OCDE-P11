@@ -1,10 +1,10 @@
 # src/rag/__init__.py
 from src.rag.query_parser import QueryParser
-from src.rag.retriever import RAGRetriever
-from src.rag.rag_engine import RAGEngine
+from src.rag.engine import RAGEngine
+from src.rag.searchbot import SearchBot
 
 __all__ = [
     'QueryParser',
-    'RAGRetriever',
-    'RAGEngine'
+    'RAGEngine',
+    'SearchBot'
 ]

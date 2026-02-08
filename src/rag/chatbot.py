@@ -3,7 +3,7 @@
 Interactive chatbot interface using LangChain RAG
 """
 from src.rag.langchain_bridge import LangChainRAG
-from src.rag.retriever import RAGRetriever
+from src.rag.engine import RAGEngine
 from config import Config
 from src.rag.query_parser import QueryParser
 from src.utils.token_accounting import get_accounting

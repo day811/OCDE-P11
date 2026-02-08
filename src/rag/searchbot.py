@@ -8,7 +8,7 @@ from typing import Dict, Optional
 from datetime import datetime
 
 from src.rag.query_parser import QueryParser
-from src.rag.retriever import RAGRetriever
+from src.rag.engine import RAGEngine
 from src.utils.token_accounting import get_accounting
 from config import Config
 from src.llm.factory import get_llm
@@ -16,7 +16,7 @@ from src.llm.factory import get_llm
 
 logger = logging.getLogger(__name__)
 
-class RAGEngine:
+class SearchBot:
     """Orchestrates RAG pipeline: parsing -> retrieval -> context -> LLM"""
     
     def __init__(self, snapshot_date: Optional[str] = None, environment: str = 'prod'):
@@ -43,7 +43,7 @@ class RAGEngine:
         
         # Initialize components
         self.query_parser = QueryParser
-        self.retriever = RAGRetriever(
+        self.retriever = RAGEngine(
             faiss_index=self.faiss_index,
             metadata=self.metadata,
             embed_function=self.embed_query

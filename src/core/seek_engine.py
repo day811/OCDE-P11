@@ -7,7 +7,7 @@ Abstraction commune pour RAGEngine et ChatBot
 import logging
 from typing import Dict, Optional, List
 from datetime import datetime
-from src.rag.rag_engine import RAGEngine
+from src.rag.searchbot import SearchBot
 from src.rag.chatbot import ChatBot
 from src.utils.token_accounting import get_accounting
 from config import Config
@@ -41,7 +41,7 @@ class SeekEngine:
 
         try:
             if self.mode == 'search':
-                self.engine = RAGEngine(snapshot_date=snapshot_date)
+                self.engine = SearchBot(snapshot_date=snapshot_date)
             elif self.mode == 'chat':
                 self.engine = ChatBot(snapshot_date=snapshot_date)
             else:
