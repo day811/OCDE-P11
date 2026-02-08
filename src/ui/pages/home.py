@@ -27,11 +27,22 @@ def render(snapshot_date: str = ""):
         l'application comprend vos questions naturelles et vous propose 
         les événements les plus pertinents.
         """)
-    
+        st.markdown("---")
+        
+        st.markdown("""
+        ### ⚡ Démarrage rapide
+                            
+        1. **Rendez-vous** sur la page "🔍 Recherche Simple"
+        2. **Posez une question** (ex: "Qu'est-ce qu'il y a à faire samedi ?")
+        3. **Explorez les résultats** et les sources trouvées
+        4. **Consultez les stats** d'utilisation des tokens
+        """)    
+
     with col2:
+        st.markdown("🤖 Dataset")
+        st.markdown( Config.BASE_URL)
         st.metric("📊 Région", "Occitanie")
         st.metric("🎭 Événements", "1000+")
-        st.metric("🤖 LLM", Config.LLM_PROVIDER)
     
     st.markdown("---")
     
@@ -63,26 +74,18 @@ def render(snapshot_date: str = ""):
         les performances du système.
         """)
     
-    st.markdown("---")
-    
-    st.markdown("### ⚡ Démarrage rapide")
-    
-    st.markdown("""
-    1. **Rendez-vous** sur la page "🔍 Recherche Simple"
-    2. **Posez une question** (ex: "Qu'est-ce qu'il y a à faire samedi ?")
-    3. **Explorez les résultats** et les sources trouvées
-    4. **Consultez les stats** d'utilisation des tokens
-    """)
     
     st.markdown("---")
     
     with st.expander("ℹ️ Informations techniques", expanded=False):
         col1, col2 = st.columns(2)
-        
+        api_key = Config.get_api_key()
         with col1:
             st.markdown("#### Configuration")
             st.write(f"""
             - **LLM Provider**: {Config.LLM_PROVIDER}
+            - **Api Key**     : {api_key[:3]}...{api_key[-3:]}
+            - **Chat model**: {Config.get_chat_model()}
             - **Embedding Model**: {Config.get_embed_model()}
             - **Vector DB**: Faiss (IndexIVFFlat)
             - **Snapshot Date**: {snapshot_date or Config.DEV_SNAPSHOT_DATE}
@@ -94,6 +97,10 @@ def render(snapshot_date: str = ""):
             index_path = Path(Config.get_index_path(snapshot_date_check))
             metadata_path = Path(Config.get_metadata_path(snapshot_date_check))
             
-            index_exists = index_path.exists()
-            status = "✅ Disponible" if index_exists else "❌ Absent"
-            st.write(f"**Index Faiss**: {status}")
+            status_index = "✅ Disponible" if index_path.exists() else "❌ Absent"
+            status_metadata = "✅ Disponible" if metadata_path.exists() else "❌ Absent"
+
+            st.write(f"""
+                    - **Index Faiss**: {status_index}
+                    - **Metadata**    : {status_metadata}  
+                    """)
