@@ -28,8 +28,8 @@ def flat_date_constraints(
         begin  = date_constraint[0]
         end = datetime = date_constraint[0] + timedelta(date_constraint[1])
         if not date_constraint[1]:
-            result = f"\nDate : le {begin.date().strftime(format)}"    
+            result = f" Date : le {begin.date().strftime(format)}"    
         else:
-            result = f"\nDate : du {begin.date().strftime(format)} au {end.date().strftime(format)}"  
+            result = f" Date : du {begin.date().strftime(format)} au {end.date().strftime(format)}"  
     return result
 
