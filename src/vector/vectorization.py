@@ -27,9 +27,7 @@ class EventVectorizer:
     def __init__(self, llm = None):
         self.model_name = Config.LLM_PROVIDER
 #        self.client = llm_api(api_key=api_key)
-        self.llm = llm or get_llm(
-            provider=Config.LLM_PROVIDER,
-            embed_model=Config.get_embed_model())
+        self.llm = llm or get_llm()
     
 
     def split_text(self, input_text, chunk_size: int = 500, level=0):
