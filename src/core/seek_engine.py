@@ -39,6 +39,7 @@ class SeekEngine:
     
     def load_engine(self, snapshot_date: str = ""):
 
+        self.snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
         try:
             if self.mode == 'search':
                 self.engine = SearchBot(snapshot_date=snapshot_date)
@@ -90,8 +91,7 @@ class SeekEngine:
             logger.error(f"Query failed: {e}", exc_info=True)
             raise
     
-    def _handle_search(self, question: str, top_k: int, 
-                       temperature: float) -> Dict:
+    def _handle_search(self, question: str, top_k: int, temperature: float) -> Dict:
         """Handle search mode query (RAGEngine)."""
         
         logger.debug(f"Handling search query: {question}")
@@ -99,16 +99,10 @@ class SeekEngine:
         result = self.engine.answer_question( # type: ignore
             question=question,
             top_k=top_k,
+            temperature=temperature
         )
         
-        return {
-            'answer': result.get('answer', ''),
-            'sources': result.get('sources', []),
-            'total_tokens': result.get('total_tokens', 0),
-            'execution_time': result.get('execution_time', 0),
-            'constraints': result.get('constraints', {}),
-            'mode': 'search'
-        }
+        return result
     
     def _handle_chat(self, question: str, top_k: int, 
                      temperature: float) -> Dict:
@@ -122,15 +116,7 @@ class SeekEngine:
             temperature=temperature
         )
         
-        return {
-            'answer': result.get('answer', ''),
-            'sources': result.get('sources', []),
-            'total_tokens': result.get('total_tokens', 0),
-            'execution_time': result.get('execution_time', 0),
-            'constraints': result.get('constraints', {}),
-            'mode': 'chat',
-            'conversation_id': getattr(self.engine, 'conversation_id', None)
-        }
+        return result
     
     def get_session_accounting(self) -> Dict:
         """Get token accounting for current session."""
