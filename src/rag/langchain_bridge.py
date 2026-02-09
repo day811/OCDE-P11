@@ -65,19 +65,16 @@ class FaissRetrieverAdapter(BaseRetriever):
         for chunk in chunks:
             dates = self.rag_retriever._matches_date(chunk, constraints['date'],only_first=False) # type: ignore
             dates = " et ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
-            doc_text = f"""
-            Title: {chunk.get('title', 'N/A')}
-            City: {chunk.get('city', 'N/A')}
-            Dates: {dates}
-            Description: {chunk.get('text', '')}
-            URL: {chunk.get('url', 'N/A')}
-            """
             documents.append(Document(
                 page_content=chunk.get('text'),
                 metadata={
-                    'source': chunk.get('url'),
+                    'url': chunk.get('url'),
+                    'title': chunk.get('title'),
+                    'description' : chunk.get('text'),
                     'event_id': chunk.get('event_id'),
+                    'dept': chunk.get('dept'),
                     'city': chunk.get('city'),
+                    'address': chunk.get('address'),
                     'dates': dates
                 }
             ))
@@ -183,6 +180,7 @@ Sois concis et pertinent.
                 'answer': result['result'],
                 'sources': result.get('source_documents', []),
                 'total_tokens': total_tokens,
+                'constraints' : QueryParser.parse_constraints(query=question),
                 'success': True
             }
         except Exception as e:
