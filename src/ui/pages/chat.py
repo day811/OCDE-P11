@@ -6,7 +6,7 @@ Chat page - Interactive chat with LangChain
 import streamlit as st
 import logging
 from src.core.seek_engine import SeekEngine
-from src.ui.components import render_no_index_error, render_advanced_filters, render_error
+from src.ui.components import render_no_index_error, render_advanced_filters, render_error,render_stats
 from pathlib import Path
 from config import Config
 
@@ -52,10 +52,12 @@ def render(snapshot_date: str = ""):
         if message['role'] == 'user':
             st.markdown(f"**👤 Vous:** {message['content']}")
         elif message['role'] == 'assistant':
-            st.markdown(f"**🤖 Assistant:** {message['content']}")
+            st.markdown(f"**🤖 Assistant:** {message['answer']}")
+            if message.get('total_tokens'):
+                render_stats(message)
         elif message['role'] == 'error':
             st.error(message['content'])
-   
+  
     st.markdown("---")
     
     # Input section
@@ -78,7 +80,7 @@ def render(snapshot_date: str = ""):
     
     filters = render_advanced_filters()
 
-    # ✅ VÉRIFIER UNIQUEMENT LE BOUTON, PAS LE TEXTE!
+    # ✅ CHECK BUTTON
     if send_button:
         st.session_state.should_submit_message = True
     
@@ -113,12 +115,10 @@ def render(snapshot_date: str = ""):
                 
                 logger.debug(f"[chat.render] Query successful, answer length: {len(result.get('answer', ''))}")
                 
+                message = result
+                message['role'] = 'assistant'
                 # Ajouter la réponse
-                st.session_state.messages.append({
-                    'role': 'assistant',
-                    'content': result.get('answer', 'Pas de réponse'),
-                    'sources': result.get('sources', []),
-                })
+                st.session_state.messages.append(message)
                 
                 logger.info(f"[chat.render] Message processed successfully")
             
