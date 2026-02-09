@@ -43,7 +43,7 @@ class SearchBot:
         
         # Initialize components
         self.query_parser = QueryParser
-        self.engine = RAGEngine(
+        self.rag_engine = RAGEngine(
             faiss_index=self.faiss_index,
             metadata=self.metadata,
             embed_function=self.embed_query
@@ -55,22 +55,19 @@ class SearchBot:
         return self.llm.embed(query_text)
         
     
-    def answer_question(
-        self,
+    def answer_question(self,
         question: str,
         top_k: int = 5,
         temperature: float = 0.7
     ) -> Dict:
         """Answer a question using RAG"""
-        start_time = time.time()
-        
         try:
             # Step 1: Parse constraints
             constraints = self.query_parser.parse_constraints(question, snapshot_date = self.snapshot_date)
             accounting = get_accounting()
            
             # Step 2: Retrieve chunks
-            chunks = self.engine.retrieve(
+            chunks = self.rag_engine.retrieve(
                 query_text=question,
                 k=top_k,
                 date_constraint=constraints['date'],
@@ -80,7 +77,7 @@ class SearchBot:
             chunks = chunks[:top_k]
             
             # Step 3: Build context
-            context = self.engine.build_context(chunks, constraints)
+            context = self.rag_engine.build_context(chunks, constraints)
             
             # Step 4: Generate answer with LLM
             prompt = self._build_prompt(question, context)
@@ -89,7 +86,7 @@ class SearchBot:
             # Step 5: Format response
             sources = []
             for chunk in chunks:
-                dates = self.engine._matches_date(chunk, constraints['date'],only_first=False)
+                dates = self.rag_engine._matches_date(chunk, constraints['date'],only_first=False)
                 dates = " et ".join(date.strftime("%d/%m/%Y, %H:%M:%S") for date in dates)
                 sources.append(
                     {
@@ -99,11 +96,11 @@ class SearchBot:
                         'dept': chunk.get('dept'),
                         'dates': dates,
                         'url': chunk.get('url'),
-                        'distance': chunk.get('distance')
+                        'distance': chunk.get('distance'),
+                        'top_k' :top_k
                     }
                 )
             
-            execution_time = time.time() - start_time
             
             # ✅ LOG TOKENS
             query_tokens = len(question.split()) * 1.3
@@ -120,13 +117,9 @@ class SearchBot:
             return {
                 'answer': answer,
                 'sources': sources,
-                'constraints': {
-                    'date': constraints['date'],
-                    'city': constraints['city'],
-                    'dept': constraints['dept']
-                },
+                'constraints': constraints,
+                'mode': 'search',
                 'total_tokens': int(query_tokens + context_tokens + llm_tokens),
-                'execution_time': execution_time
             }
         
         except Exception as e:

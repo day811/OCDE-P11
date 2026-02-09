@@ -42,9 +42,9 @@ class SeekEngine:
         self.snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
         try:
             if self.mode == 'search':
-                self.engine = SearchBot(snapshot_date=snapshot_date)
+                self.seek_engine = SearchBot(snapshot_date=snapshot_date)
             elif self.mode == 'chat':
-                self.engine = ChatBot(snapshot_date=snapshot_date)
+                self.seek_engine = ChatBot(snapshot_date=snapshot_date)
             else:
                 raise ValueError(f"Invalid mode: {self.mode}. Use 'search' or 'chat'.")
         except Exception as e:
@@ -72,7 +72,6 @@ class SeekEngine:
         """
         
         query_start = datetime.now()
-        
         try:
             if self.mode == 'search':
                 result = self._handle_search(question, top_k, temperature)
@@ -82,6 +81,9 @@ class SeekEngine:
             # Calculate execution time
             execution_time = (datetime.now() - query_start).total_seconds()
             result['execution_time'] = execution_time # type: ignore
+            result['question'] = question # type: ignore
+            result['snapshot_index'] = Config.get_index_path(self.snapshot_date) # type: ignore
+            result['llm_provider'] = self.seek_engine.llm.name
             
             logger.info(f"Query completed in {execution_time:.3f}s | Tokens: {result.get('total_tokens', 0)}") # type: ignore
             
@@ -96,12 +98,16 @@ class SeekEngine:
         
         logger.debug(f"Handling search query: {question}")
         
-        result = self.engine.answer_question( # type: ignore
+        result = self.seek_engine.answer_question( # type: ignore
             question=question,
             top_k=top_k,
             temperature=temperature
         )
-        
+        result['llm_model'] = self.seek_engine.llm.mochat_model
+        result['llm_embed_model'] = self.seek_engine.llm.embed_model
+        result['temperature'] = self.seek_engine.llm.temperature
+        result['top_k'] = self.seek_engine.rag_engine.top_k
+
         return result
     
     def _handle_chat(self, question: str, top_k: int, 
@@ -110,12 +116,16 @@ class SeekEngine:
         
         logger.debug(f"Handling chat query: {question}")
         
-        result = self.engine.chat( # type: ignore
+        result = self.seek_engine.chat( # type: ignore
             user_question=question,
             top_k=top_k,
             temperature=temperature
         )
-        
+        result['llm_model'] = f"{self.seek_engine.rag_engine.llm.__class__.__name__} / {self.seek_engine.rag_engine.llm.model}" 
+        result['llm_embed_model'] = self.seek_engine.llm.embed_model
+        result['temperature'] = self.seek_engine.rag_engine.llm.temperature
+        result['top_k'] = self.seek_engine.rag_engine.retriever.top_k
+
         return result
     
     def get_session_accounting(self) -> Dict:

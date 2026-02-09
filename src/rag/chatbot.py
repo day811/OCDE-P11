@@ -26,7 +26,7 @@ class ChatBot:
         self.llm = get_llm()
  
         # Initialize LangChain RAG
-        self.rag = LangChainRAG(embed_function= self._embed_query )
+        self.rag_engine = LangChainRAG(embed_function= self._embed_query )
         
         logger.info("ChatBot initialized with LangChain RAG")
     
@@ -39,18 +39,12 @@ class ChatBot:
     def chat(self, user_question: str, top_k: int = 5, temperature: float = 0.7) -> dict:
         """Process user question through LangChain RAG"""
 
-        start_time = time.time()
         logger.info(f"User question: {user_question}")
         
-        result = self.rag.answer(user_question, top_k=top_k, temperature=temperature)
+        result = self.rag_engine.answer(user_question, top_k=top_k, temperature=temperature)
         
-        execution_time = time.time() - start_time
-
-        result['execution_time'] = execution_time
-        result['question'] = user_question
+ 
         result['mode'] = 'chat'
-        result['question'] = user_question
-        result['conversation_id'] = user_question
 
         return result
     
