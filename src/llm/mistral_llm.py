@@ -10,7 +10,7 @@ class MistralLLM(BaseLLM):
     def __init__(self, temperature: float = 0.7):
 
         super().__init__(Config.get_chat_model() , Config.get_embed_model() , temperature)
-
+        self.name = "Mistral AI"
         self.client = Mistral(api_key=Config.get_api_key())
         logger.info(f"MistralLLM initialized - Chat: {self.chat_model}, Embed: {self.embed_model}, Temp: {self.temperature}")
     
