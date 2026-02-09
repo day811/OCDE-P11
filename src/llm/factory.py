@@ -37,7 +37,7 @@ def get_llm(temperature: float = 0.7):
     from config import Config
     
 
-    temperature = temperature if temperature is not None else Config.LLM_TEMPERATURE
+    temperature = temperature if temperature else Config.LLM_TEMPERATURE
     
     return LLMFactory.create_llm( temperature)
 

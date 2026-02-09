@@ -10,16 +10,18 @@ class GeminiLLM(BaseLLM):
     def __init__(self, temperature: float = 0.7):
 
         super().__init__(Config.get_chat_model(), Config.get_embed_model(), temperature)
-        genai.configure(api_key=Config.get_api_key()) # type: ignore
-        self.client = genai.GenerativeModel(self.chat_model)# type: ignore
+        self.name = "Gemnii AI"
+
+        self.client = genai.Client(api_key=Config.get_api_key())# type: ignore
         logger.info(f"GeminiLLM initialized - Chat: {self.chat_model}, Embed: {self.embed_model}, Temp: {self.temperature}")
     
     def generate(self, prompt: str, temperature: float = 0.7) -> str:
         """Generate text using Gemini API"""
         temp = temperature if temperature is not None else self.temperature
-        response = self.client.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(temperature=temp)
+        response = self.client.models.generate_content(
+            model= self.chat_model,
+            contents= prompt,
+            generation_config ={'temperature' : temperature}
         )
         return response.text
     
@@ -28,15 +30,15 @@ class GeminiLLM(BaseLLM):
 
         if isinstance(text, list):
             # Multiple texts → return list of embeddings
-            response = genai.embed_content( #type:ignore
+            response = self.client.models.embed_content( #type:ignore
                 model=self.embed_model,
-                content=text
+                contents=text
             )
-            return [embed.embedding for embed in response.data]
+            return [embed.values for embed in response.embeddings]
         else:
             # Single text → return single embedding
-            response = genai.embed_content( #type:ignore
+            response = self.client.models.embed_content( #type:ignore
                 model=self.embed_model,
-                content=[text]
+                contents=[text]
             )
-            return response.data[0].embedding
+            return response.embeddings[0].values
