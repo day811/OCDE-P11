@@ -21,6 +21,7 @@ class QueryParser:
         months = ['janvier',"fevrier", "mars", "avril", "mai","juin", "juillet","aout", "septembre", "octobre", "novembre", "decembre"]
         query_lower = normalize_str(query)
         today = today = datetime.today()
+        current_year = int(today.strftime("%Y"))
 
         #On a precise date
         match = re.search(r'\ble\s+(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[0,1,2])[\/\-\s](?:20|)([234][0-9]|)', query_lower +" ")
@@ -62,16 +63,14 @@ class QueryParser:
                 
             return (today  , days_until_sunday)
 
-        
         # On precise month
         for index, month in enumerate(months):
-            current_year = int(today.strftime("%Y"))
-            if re.search(fr'\b(?:mois de|en)\s({month})\b', query_lower):
+            if re.search(fr"\b(?:mois de\s|mois d'|en\s)({month})\b", query_lower):
                 index_month = (index + 1) 
                 first_day = datetime(current_year, index_month,1)
-                days_in_months = monthrange(first_day.year, first_day.month)[1]
-                
-                return (first_day ,days_in_months-1)
+                first_day = max(first_day,today)
+                days_in_months = monthrange(first_day.year, first_day.month)[1]- first_day.day
+                return (first_day ,days_in_months)
                 
 
         # return the next 30 days
