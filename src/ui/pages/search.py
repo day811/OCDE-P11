@@ -33,6 +33,9 @@ def render(snapshot_date: str = ""):
     if 'search_history' not in st.session_state:
         st.session_state.search_history = []
     
+    if 'should_submit_message' not in st.session_state:
+        st.session_state.should_submit_message = False
+
     snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
     
     # Check if index exists
@@ -73,7 +76,13 @@ def render(snapshot_date: str = ""):
     filters = render_advanced_filters()
     
     # Search execution
-    if search_button or question.strip():
+    if search_button :
+        st.session_state.should_submit_message = True
+    
+    # ✅ TRAITER SEULEMENT SI LE BOUTON A ÉTÉ CLIQUÉ
+    if st.session_state.should_submit_message:
+        st.session_state.should_submit_message = False  # Reset le flag
+
         if not question.strip():
             st.warning("⚠️ Veuillez entrer une question.")
             return
