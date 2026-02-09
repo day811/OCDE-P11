@@ -5,10 +5,10 @@ Interactive chatbot interface using LangChain RAG
 from src.rag.langchain_bridge import LangChainRAG
 from src.rag.engine import RAGEngine
 from config import Config
-from src.rag.query_parser import QueryParser
 from src.utils.token_accounting import get_accounting
 from src.llm.factory import get_llm
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -38,16 +38,19 @@ class ChatBot:
    
     def chat(self, user_question: str, top_k: int = 5, temperature: float = 0.7) -> dict:
         """Process user question through LangChain RAG"""
+
+        start_time = time.time()
         logger.info(f"User question: {user_question}")
         
         result = self.rag.answer(user_question, top_k=top_k, temperature=temperature)
         
+        execution_time = time.time() - start_time
 
-        return {
-            'question': user_question,
-            'answer': result['answer'],
-            'sources': result['sources'],
-            'success': result['success'],
-            'total_tokens': result['total_tokens']
-        }
+        result['execution_time'] = execution_time
+        result['question'] = user_question
+        result['mode'] = 'chat'
+        result['question'] = user_question
+        result['conversation_id'] = user_question
+
+        return result
     
