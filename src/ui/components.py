@@ -5,6 +5,7 @@ Composants Streamlit réutilisables pour l'interface RAG
 
 import streamlit as st
 from typing import Dict, List, Optional
+from src.utils.utils import flat_date_constraints
 from datetime import datetime
 
 
@@ -125,13 +126,33 @@ def render_stats(result: Dict):
         st.metric("📍 Résultats", sources_count)
     
     with st.expander("📈 Détails", expanded=False):
-        st.json({
-            'total_tokens': total_tokens,
-            'execution_time': f"{exec_time:.3f}s",
-            'sources_count': sources_count,
-            'mode': result.get('mode', 'unknown'),
-            'timestamp': datetime.now().isoformat()
-        })
+        col4,col5 = st.columns(2)
+        with col4:
+            st.markdown('**Statistiques**')
+            st.json({
+                'total_tokens': total_tokens,
+                'execution_time': f"{exec_time:.3f}s",
+                'sources_count': sources_count,
+                'mode': result.get('mode', 'unknown'),
+                'timestamp': datetime.now().isoformat()
+            })
+        with col5:
+            st.markdown('**Environnement**')
+            st.json({
+                'Snapshot Index' : result.get('snapshot_index',""),
+                'LLM provider' : result['llm_provider'],
+                'LLM Model' : result['llm_model'],
+                'Top_k' : result['top_k'],
+                'Temperature' : result['temperature'],
+            })
+
+            st.markdown('**Contraintes**')
+            st.json({
+                'Date' : flat_date_constraints(result['constraints']['date']),
+                'Département' : result['constraints']['dept'],
+                'Ville' : result['constraints']['city'],
+            })
+
 
 
 def render_error(error_message: str):
