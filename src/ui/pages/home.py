@@ -6,6 +6,8 @@ Home page - Dashboard and introduction
 import streamlit as st
 from config import Config
 from pathlib import Path
+import pandas as pd
+from datetime import datetime
 
 
 def render(snapshot_date: str = ""):
@@ -39,10 +41,16 @@ def render(snapshot_date: str = ""):
         """)    
 
     with col2:
+        processed_path = Config.get_processed_snapshot_path(snapshot_date)
+        df = pd.read_json(processed_path)
+        nb_events = df.shape[0]
+        mask = df['first_date']> datetime.now().isoformat()
+        nb_future_events = df[mask].shape[0]
         st.markdown("🤖 Dataset")
         st.markdown( Config.BASE_URL)
         st.metric("📊 Région", "Occitanie")
-        st.metric("🎭 Événements", "1000+")
+        st.metric("🎭 Total Événements", nb_events)
+        st.metric("🎭 Événements à venir ", nb_future_events)
     
     st.markdown("---")
     
