@@ -77,3 +77,4 @@ def get_langchain_llm( temperature: float = 0.7):
         )
     else:
         raise ValueError(f"Provider non supporté: {provider}")
+    
