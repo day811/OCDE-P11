@@ -76,8 +76,8 @@ class Config:
             'embed': os.getenv('OPENAI_EMBED_MODEL', 'text-embedding-3-small')
         },
         'gemini': {
-            'chat': os.getenv('GEMINI_CHAT_MODEL', 'gemini-1.5-flash'),
-            'embed': os.getenv('GEMINI_EMBED_MODEL', 'models/embedding-001')
+            'chat': os.getenv('GEMINI_CHAT_MODEL', 'gemini-2.5-flash'),
+            'embed': os.getenv('GEMINI_EMBED_MODEL', 'gemini-embedding-001')
         }
     }
     
@@ -125,17 +125,20 @@ class Config:
     # ============= METHODS =============
     
     @classmethod
-    def get_api_key(cls):
-        return cls.API_KEYS[cls.LLM_PROVIDER] 
+    def get_api_key(cls, provider:str=""):
+        if not provider: provider= cls.LLM_PROVIDER
+        return cls.API_KEYS[provider] 
         # Get models from config
 
     @classmethod
-    def get_chat_model(cls):
-        return cls.LLM_MODELS[cls.LLM_PROVIDER]['chat']
+    def get_chat_model(cls, provider:str=""):
+        if not provider: provider= cls.LLM_PROVIDER
+        return cls.LLM_MODELS[provider]['chat']
     
     @classmethod
-    def get_embed_model(cls):
-        return cls.LLM_MODELS[cls.LLM_PROVIDER]['embed']
+    def get_embed_model(cls, provider:str=""):
+        if not provider: provider= cls.LLM_PROVIDER
+        return cls.LLM_MODELS[provider]['embed']
     
     
     @classmethod
@@ -149,64 +152,6 @@ class Config:
         cls.ENVIRONMENT = env
         print(f"📌 Environment set to: {env.value.upper()}")
     
-    @classmethod
-    def get_active_index_path(cls) :
-        """
-        Get the appropriate Faiss index based on environment.
-        
-        Returns:
-            Path to Faiss index file
-            
-        Raises:
-            FileNotFoundError: If expected index doesn't exist
-        """
-        if cls.ENVIRONMENT == Environment.DEVELOPMENT:
-            # Always use FROZEN development snapshot
-            index_path = cls.INDEXES_DIR / f"faiss_index_{cls.DEV_SNAPSHOT_DATE}.bin"
-            
-            if not index_path.exists():
-                raise FileNotFoundError(
-                    f"\n❌ Development index not found: {index_path}\n"
-                    f"Run: python scripts/run_full_pipeline.py "
-                    f"--snapshot-date {cls.DEV_SNAPSHOT_DATE}\n"
-                )
-            
-            print(f"🔒 [DEVELOPMENT] Loading index from {cls.DEV_SNAPSHOT_DATE}")
-            return str(index_path)
-        
-        elif cls.ENVIRONMENT == Environment.DEMO:
-            # Use LATEST available snapshot
-            index_files = sorted(cls.INDEXES_DIR.glob("faiss_index_*.bin"))
-            
-            if not index_files:
-                raise FileNotFoundError(
-                    f"\n❌ No index files found in {cls.INDEXES_DIR}\n"
-                    f"Run: python scripts/run_full_pipeline.py\n"
-                )
-            
-            latest_index = index_files[-1]
-            latest_date = latest_index.stem.replace("faiss_index_", "")
-            print(f"⭐ [DEMO] Loading LATEST index from {latest_date}")
-            return str(latest_index)
-        
-        elif cls.ENVIRONMENT == Environment.PRODUCTION:
-            raise NotImplementedError("Production mode not implemented for POC")
-    
-    @classmethod
-    def get_active_metadata_path(cls) -> str:
-        """
-        Get the appropriate metadata file based on active index.
-        
-        Returns:
-            Path to metadata JSON file
-        """
-        index_path = cast(str, cls.get_active_index_path())
-        metadata_path = index_path.replace("faiss_index_", "metadata_").replace(".bin", ".json")
-        
-        if not Path(metadata_path).exists():
-            raise FileNotFoundError(f"Metadata not found: {metadata_path}")
-        
-        return metadata_path
     
     @classmethod
     def print_available_indexes(cls) -> None:
@@ -223,18 +168,25 @@ class Config:
             return
         
         for idx, fpath in enumerate(index_files, 1):
+            short_filename = fpath.stem
+            embedder = cls.LLM_PROVIDER
+            for llm in cls.ALL_LLM:
+                new_stem = short_filename.replace(f"{llm}_","")
+                if new_stem != short_filename:
+                   short_filename = new_stem
+                   embedder = llm
+                   break 
             snapshot_date = fpath.stem.replace("faiss_index_", "")
             file_size_mb = fpath.stat().st_size / (1024 * 1024)
             
             # Check if this is development or latest
-            markers = []
+            markers = "[]"
             if snapshot_date == cls.DEV_SNAPSHOT_DATE:
-                markers.append("🔒 DEVELOPMENT (FROZEN)")
+                markers = "🔒 DEVELOPMENT (FROZEN)"
             if idx == len(index_files):
-                markers.append("⭐ LATEST")
+                markers="⭐ LATEST"
             
-            marker_str = " | ".join(markers) if markers else ""
-            print(f"  {idx}. {snapshot_date}  ({file_size_mb:.1f} MB)  {marker_str}")
+            print(f"  {idx}. {snapshot_date}  ({file_size_mb:.1f} MB)  {markers}")
         
         print("="*70 + "\n")
     
@@ -242,7 +194,7 @@ class Config:
     def get_available_index_dates(cls):
         """Get all available snapshots dates"""
         
-        index_files = sorted(cls.INDEXES_DIR.glob("faiss_index_*.bin"))
+        index_files = sorted(cls.INDEXES_DIR.glob("*_faiss_index_*.bin"))
         
         if not index_files:
             print("  ❌ No indexes found. Run pipeline first.")
@@ -251,7 +203,15 @@ class Config:
         
         result = []
         for idx, fpath in enumerate(index_files, 1):
-            snapshot_date = fpath.stem.replace("faiss_index_", "")
+            short_filename = fpath.stem
+            embedder = cls.LLM_PROVIDER
+            for llm in cls.ALL_LLM:
+                new_stem = short_filename.replace(f"{llm}_","")
+                if new_stem != short_filename:
+                   short_filename = new_stem
+                   embedder = llm
+                   break 
+            snapshot_date = short_filename.replace("faiss_index_", "")
             file_size_mb = fpath.stat().st_size / (1024 * 1024)
             
             # Check if this is development or latest
@@ -261,7 +221,7 @@ class Config:
             if snapshot_date == cls.DEV_SNAPSHOT_DATE:
                 markers= "🔒 DEV"
             
-            result.append({snapshot_date: (markers,file_size_mb)})
+            result.append({snapshot_date: (markers,file_size_mb,embedder)})
         return result    
     
     @classmethod
@@ -281,20 +241,20 @@ class Config:
         return str(cls.PROCESSED_DATA_DIR / f"processed_events_{snapshot_date}.json")
     
     @classmethod
-    def get_index_path(cls, snapshot_date: str = "") -> str:
+    def get_index_path(cls, provider:str, snapshot_date: str = "") -> str:
         """Get path for Faiss index"""
         if snapshot_date == "":
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
-        return str(cls.INDEXES_DIR / f"faiss_index_{snapshot_date}.bin")
+        return str(cls.INDEXES_DIR / f"{provider}_faiss_index_{snapshot_date}.bin")
     
     @classmethod
-    def get_metadata_path(cls, snapshot_date: str = "") -> str:
+    def get_metadata_path(cls, provider:str, snapshot_date: str = "") -> str:
         """Get path for metadata JSON"""
         if snapshot_date == "":
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
-        return str(cls.INDEXES_DIR / f"metadata_{snapshot_date}.json")
+        return str(cls.INDEXES_DIR / f"{provider}_metadata_{snapshot_date}.json")
     
     @classmethod
     def print_config(cls) -> None:
