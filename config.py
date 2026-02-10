@@ -63,7 +63,7 @@ class Config:
         LLM_OPENAI :  os.getenv('OPENAI_API_KEY',''), 
         LLM_GEMINI :  os.getenv('GEMINI_API_KEY','') }
     
-    ALL_LLM = [LLM_MISTRAL, LLM_OPENAI, LLM_GEMINI]
+    ALL_LLM = [LLM_MISTRAL, LLM_GEMINI, LLM_OPENAI]
     
     # Default models fallback (if not specified in .env)
     LLM_MODELS = {
