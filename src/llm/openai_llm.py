@@ -9,9 +9,11 @@ logger = logging.getLogger(__name__)
 class OpenAILLM(BaseLLM):
     def __init__(self, temperature: float = 0.7):
 
-        super().__init__(Config.get_chat_model(), Config.get_embed_model(), temperature)
         self.name = "Open AI"
-        self.client = OpenAI(api_key=Config.get_api_key())
+        self.provider = "mistral"
+        super().__init__(self.provider, temperature)
+
+        self.client = OpenAI(api_key=Config.get_api_key(self.provider ))
         logger.info(f"OpenAILLM initialized - Chat: {self.chat_model}, Embed: {self.embed_model}, Temp: {self.temperature}")
     
     def generate(self, prompt: str, temperature: float = 0.7) -> str:

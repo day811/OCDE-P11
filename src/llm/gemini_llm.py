@@ -9,10 +9,11 @@ logger = logging.getLogger(__name__)
 class GeminiLLM(BaseLLM):
     def __init__(self, temperature: float = 0.7):
 
-        super().__init__(Config.get_chat_model(), Config.get_embed_model(), temperature)
         self.name = "Gemnii AI"
-
-        self.client = genai.Client(api_key=Config.get_api_key())# type: ignore
+        self.provider = "mistral"
+        super().__init__(self.provider, temperature)
+    
+        self.client = genai.Client(api_key=Config.get_api_key(self.provider ))# type: ignore
         logger.info(f"GeminiLLM initialized - Chat: {self.chat_model}, Embed: {self.embed_model}, Temp: {self.temperature}")
     
     def generate(self, prompt: str, temperature: float = 0.7) -> str:
@@ -21,8 +22,11 @@ class GeminiLLM(BaseLLM):
         response = self.client.models.generate_content(
             model= self.chat_model,
             contents= prompt,
-            generation_config ={'temperature' : temperature}
-        )
+            config={
+                "temperature": self.temperature,
+                "max_output_tokens": 512,
+            },
+            )
         return response.text
     
     def embed(self, text: str):
