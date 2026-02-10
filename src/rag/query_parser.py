@@ -25,7 +25,7 @@ class QueryParser:
         current_year = int(today.strftime("%Y"))
 
         #On a precise date
-        match = re.search(r'\ble\s+(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[0,1,2])[\/\-\s](?:20|)([234][0-9]|)', query_lower +" ")
+        match = re.search(r'\ble\s+(0?[1-9]|[12][0-9]|3[01])[\/\- ](0?[1-9]|1[0,1,2])[\/\-\s ](?:20|)([234][0-9]|)', query_lower +" ")
         if match and match.lastindex >= 2: # pyright: ignore[reportOptionalOperand]
             dd = int(match[1])
             mm = int(match[2])
