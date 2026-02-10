@@ -15,12 +15,13 @@ class QueryParser:
     
     
     @staticmethod
-    def parse_date(query: str) -> tuple[datetime,int]:
+    def parse_date(query: str, today = None) -> tuple[datetime,int]:
         
         """Extract date from query"""
         months = ['janvier',"fevrier", "mars", "avril", "mai","juin", "juillet","aout", "septembre", "octobre", "novembre", "decembre"]
         query_lower = normalize_str(query)
-        today = today = datetime.today()
+        # En mode développement, repositionne aujourd'hui sur snapshot_date
+        today = datetime.fromisoformat(today) if today and today == Config.DEV_SNAPSHOT_DATE else datetime.today()
         current_year = int(today.strftime("%Y"))
 
         #On a precise date
@@ -103,7 +104,7 @@ class QueryParser:
         return None
 
     @staticmethod
-    def parse_constraints(query: str,  snapshot_date:str = Config.DEV_SNAPSHOT_DATE) -> Dict:
+    def parse_constraints(query: str, snapshot_date:str = Config.DEV_SNAPSHOT_DATE) -> Dict:
         """Parse date and city from query"""
         metadata_path = Config.get_processed_snapshot_path(snapshot_date)
         # make list of cities and department
@@ -118,7 +119,7 @@ class QueryParser:
         QueryParser.DEPARTMENTS = depts.to_list()
 
         return {
-            'date': QueryParser.parse_date(query),
+            'date': QueryParser.parse_date(query, today=snapshot_date),
             'city': QueryParser.parse_city(query),
             'dept': QueryParser.parse_department(query)
         }
