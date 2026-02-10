@@ -15,25 +15,26 @@ logger = logging.getLogger(__name__)
 class ChatBot:
     """Chatbot for event recommendations"""
     
-    def __init__(self, snapshot_date=Config.DEV_SNAPSHOT_DATE):
+    def __init__(self, embedder:str, snapshot_date=Config.DEV_SNAPSHOT_DATE):
 #        import faiss
 #        import json
         from pathlib import Path
 
         self.snapshot_date = snapshot_date
+        self.embedder = embedder
         # Load Faiss index and metadata
         
-        self.llm = get_llm()
+        self.embed_llm = get_llm(provider=embedder)
  
         # Initialize LangChain RAG
-        self.rag_engine = LangChainRAG(embed_function= self._embed_query )
+        self.rag_engine = LangChainRAG(embedder, embed_function= self._embed_query )
         
         logger.info("ChatBot initialized with LangChain RAG")
     
     def _embed_query(self, query_text: str):
-        """Embed query using Mistral"""
+        """Embed query using Faiss embedder"""
         
-        return self.llm.embed(query_text)
+        return self.embed_llm.embed(query_text)
         
    
     def chat(self, user_question: str, top_k: int = 5, temperature: float = 0.7) -> dict:

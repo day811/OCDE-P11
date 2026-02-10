@@ -10,7 +10,7 @@ import pandas as pd
 from datetime import datetime
 
 
-def render(snapshot_date: str = ""):
+def render(snapshot_date: str = "", embedder: str=""):
     """Render home page."""
     
     st.title("🎭 Événements Culturels - Moteur RAG")
@@ -91,22 +91,23 @@ def render(snapshot_date: str = ""):
         with col1:
             st.markdown("#### Configuration")
             st.write(f"""
-            - **LLM Provider**: {Config.LLM_PROVIDER}
             - **Api Key**     : {api_key[:3]}...{api_key[-3:]}
-            - **Chat model**: {Config.get_chat_model()}
-            - **Embedding Model**: {Config.get_embed_model()}
-            - **Vector DB**: Faiss (IndexIVFFlat)
+            - **Chat model**: {Config.LLM_PROVIDER}/{Config.get_chat_model()}
+            - **Embedding Model**: {embedder}/{Config.get_embed_model(embedder)}
+            - **Vector DB**: Faiss (IndexIVFFlat) with {embedder}
             - **Snapshot Date**: {snapshot_date or Config.DEV_SNAPSHOT_DATE}
             """)
         
         with col2:
             st.markdown("#### État des données")
             snapshot_date_check = snapshot_date or Config.DEV_SNAPSHOT_DATE
-            index_path = Path(Config.get_index_path(snapshot_date_check))
-            metadata_path = Path(Config.get_metadata_path(snapshot_date_check))
+            short_index_path = Config.get_index_path(embedder,snapshot_date_check)
+            index_path = Path(short_index_path)
+            short_metadata_path = Config.get_metadata_path(embedder,snapshot_date_check)
+            metadata_path = Path(short_metadata_path)
             
-            status_index = "✅ Disponible" if index_path.exists() else "❌ Absent"
-            status_metadata = "✅ Disponible" if metadata_path.exists() else "❌ Absent"
+            status_index = f"{short_index_path.split('/')[-1]} : " + ( "✅ Disponible" if index_path.exists() else "❌ Absent")
+            status_metadata = f"{short_metadata_path.split('/')[-1]} : " + ( "✅ Disponible" if metadata_path.exists() else "❌ Absent")
 
             st.write(f"""
                     - **Index Faiss**: {status_index}

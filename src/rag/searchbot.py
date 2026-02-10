@@ -19,25 +19,34 @@ logger = logging.getLogger(__name__)
 class SearchBot:
     """Orchestrates RAG pipeline: parsing -> retrieval -> context -> LLM"""
     
-    def __init__(self, snapshot_date: Optional[str] = None, environment: str = 'prod'):
+    def __init__(self, embedder:str, snapshot_date: Optional[str] = None, environment: str = 'prod'):
         self.snapshot_date = snapshot_date or datetime.now().strftime('%Y-%m-%d')
         self.environment = environment
+        self.embedder =embedder
         
         # ✅ INITIALIZE LLM FROM CONFIG
-        self.llm = get_llm(
+        self.search_llm = get_llm(
             temperature=Config.LLM_TEMPERATURE
         )
+        
+        if embedder != Config.LLM_PROVIDER:
+            self.embed_llm = get_llm(
+                temperature=Config.LLM_TEMPERATURE,
+                provider=embedder
+            )
+        else:
+            self.embed_llm = self.search_llm
             
         
         self.snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
         self.environment = environment
         
         # Load Faiss index
-        index_path = Config.get_index_path(self.snapshot_date)
+        index_path = Config.get_index_path(embedder,self.snapshot_date)
         self.faiss_index = faiss.read_index(index_path)
         
         # Load metadata
-        metadata_path = Config.get_metadata_path(self.snapshot_date)
+        metadata_path = Config.get_metadata_path(embedder, self.snapshot_date)
         with open(metadata_path, 'r') as f:
             self.metadata = json.load(f)
         
@@ -52,7 +61,8 @@ class SearchBot:
     
     def embed_query(self, query_text: str) -> list:
         """Embed query using LLM"""
-        return self.llm.embed(query_text)
+
+        return self.embed_llm.embed(query_text)
         
     
     def answer_question(self,
@@ -140,7 +150,7 @@ Basé sur le contexte, fournis une réponse concise recommandant les événement
     def _generate_answer(self, prompt: str, temperature: float = 0.7) -> str:
         """Generate answer using LLM"""
         try:
-            return self.llm.generate(prompt, temperature=temperature)
+            return self.search_llm.generate(prompt, temperature=temperature)
 
         except Exception as e:
             logger.error(f"LLM generation error: {e}")

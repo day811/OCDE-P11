@@ -90,15 +90,15 @@ class FaissRetrieverAdapter(BaseRetriever):
 class LangChainRAG:
     """RAG system using LangChain orchestration"""
     
-    def __init__(self, embed_function: Callable, snapshot_date=Config.DEV_SNAPSHOT_DATE):
+    def __init__(self, embedder:str,embed_function: Callable, snapshot_date=Config.DEV_SNAPSHOT_DATE):
         
         self.snapshot_date = snapshot_date
         self.embed_function  = embed_function
         self.qa_chain = None
         
         # Define RAG prompt
-        index_path = Config.get_index_path(self.snapshot_date)
-        metadata_path = Config.get_metadata_path(self.snapshot_date)
+        index_path = Config.get_index_path(embedder, self.snapshot_date)
+        metadata_path = Config.get_metadata_path(embedder, self.snapshot_date)
         
         self.faiss_index = faiss.read_index(index_path)
         

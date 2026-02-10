@@ -97,13 +97,15 @@ llm_provider = st.sidebar.selectbox(
 available_dates = Config.get_available_index_dates()
 date_options = []
 labels = []
+embedders=[]
 for d in available_dates:
-    (date_str, (marker, size)) = list(d.items())[0]
+    (date_str, (marker, size, embedder)) = list(d.items())[0]
     label = f"{date_str} ({size:.1f} MB)"
     if marker:
         label += f"  -  {marker}"
     date_options.append(date_str)
     labels.append(label)
+    embedders.append(embedder)
 
 # valeur par défaut: DEV_SNAPSHOT_DATE si présente, sinon dernière
 default_date = Config.DEV_SNAPSHOT_DATE
@@ -120,6 +122,7 @@ selected_label = st.sidebar.selectbox(
 
 # On récupère la date correspondant au label choisi
 snapshot_date = date_options[labels.index(selected_label)]
+embedder = embedders[labels.index(selected_label)]
 
 # ✅ CALLBACK: Réinitialiser au changement de date
 if llm_provider != st.session_state.get('previous_llm', "") or \
@@ -130,9 +133,9 @@ if llm_provider != st.session_state.get('previous_llm', "") or \
     
     # Réinitialiser les engines
     if 'search_engine' in st.session_state:
-        st.session_state.search_engine.load_engine(snapshot_date)
+        st.session_state.search_engine.load_engine(embedder, snapshot_date)
     if 'chat_engine' in st.session_state:
-        st.session_state.chat_engine.load_engine(snapshot_date)
+        st.session_state.chat_engine.load_engine(embedder,snapshot_date)
     
     
     st.session_state.previous_snapshot_date = snapshot_date
@@ -149,15 +152,15 @@ st.sidebar.markdown(f"**Session**: {st.session_state.session_id}")
 
 if page == "🏠 Accueil":
     from src.ui.pages import home
-    home.render(snapshot_date=snapshot_date)
+    home.render(snapshot_date=snapshot_date, embedder = embedder)
 
 elif page == "🔍 Recherche Simple":
     from src.ui.pages import search
-    search.render(snapshot_date=snapshot_date)
+    search.render(snapshot_date=snapshot_date, embedder = embedder)
 
 elif page == "💬 Chat Interactif":
     from src.ui.pages import chat
-    chat.render(snapshot_date=snapshot_date)
+    chat.render(snapshot_date=snapshot_date, embedder = embedder)
 
 elif page == "📊 Analytique":
     from src.ui.pages import analytics

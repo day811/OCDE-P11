@@ -21,7 +21,7 @@ class SeekEngine:
     Abstrait les détails d'implémentation de RAGEngine et ChatBot.
     """
     
-    def __init__(self, snapshot_date: str = "", mode: str = 'search'):
+    def __init__(self, embedder:str, snapshot_date: str = "", mode: str = 'search'):
         """
         Initialize SeekEngine.
         
@@ -30,21 +30,23 @@ class SeekEngine:
             mode: 'search' pour recherche simple, 'chat' pour chat interactif
         """
         self.snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
+        self.embedder = embedder
         self.mode = mode
-        self.start_time = datetime.now()
+
         
         logger.info(f"Initializing SeekEngine (mode={mode}, snapshot={self.snapshot_date})")
-        self.load_engine(snapshot_date=snapshot_date)
+        self.load_engine(embedder, snapshot_date=snapshot_date)
         
     
-    def load_engine(self, snapshot_date: str = ""):
+    def load_engine(self, embedder:str, snapshot_date: str = ""):
 
         self.snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
+        self.embedder = embedder
         try:
             if self.mode == 'search':
-                self.seek_engine = SearchBot(snapshot_date=snapshot_date)
+                self.seek_engine = SearchBot(embedder, snapshot_date=snapshot_date)
             elif self.mode == 'chat':
-                self.seek_engine = ChatBot(snapshot_date=snapshot_date)
+                self.seek_engine = ChatBot(embedder,snapshot_date=snapshot_date)
             else:
                 raise ValueError(f"Invalid mode: {self.mode}. Use 'search' or 'chat'.")
         except Exception as e:
@@ -83,8 +85,7 @@ class SeekEngine:
             result['execution_time'] = execution_time # type: ignore
             result['question'] = question # type: ignore
             result['snapshot_index'] = Config.get_index_path(self.snapshot_date) # type: ignore
-            result['llm_provider'] = self.seek_engine.llm.name
-            
+            result['llm_embed_model'] = f"{self.seek_engine.embed_llm.name}:{self.seek_engine.embed_llm.chat_model}"
             logger.info(f"Query completed in {execution_time:.3f}s | Tokens: {result.get('total_tokens', 0)}") # type: ignore
             
             return result # type: ignore
@@ -103,9 +104,8 @@ class SeekEngine:
             top_k=top_k,
             temperature=temperature
         )
-        result['llm_model'] = self.seek_engine.llm.mochat_model
-        result['llm_embed_model'] = self.seek_engine.llm.embed_model
-        result['temperature'] = self.seek_engine.llm.temperature
+        result['llm_chat_model'] = f"{self.seek_engine.search_llm.name}:{self.seek_engine.search_llm.chat_model}"
+        result['temperature'] = self.seek_engine.search_llm.temperature
         result['top_k'] = self.seek_engine.rag_engine.top_k
 
         return result
@@ -121,8 +121,7 @@ class SeekEngine:
             top_k=top_k,
             temperature=temperature
         )
-        result['llm_model'] = f"{self.seek_engine.rag_engine.llm.__class__.__name__} / {self.seek_engine.rag_engine.llm.model}" 
-        result['llm_embed_model'] = self.seek_engine.llm.embed_model
+        result['llm_chat_model'] = f"{self.seek_engine.rag_engine.llm.__class__.__name__}:{self.seek_engine.rag_engine.llm.model}" 
         result['temperature'] = self.seek_engine.rag_engine.llm.temperature
         result['top_k'] = self.seek_engine.rag_engine.retriever.top_k
 

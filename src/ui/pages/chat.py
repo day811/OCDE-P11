@@ -13,7 +13,7 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 
-def render(snapshot_date: str = ""):
+def render(snapshot_date: str = "", embedder : str=""):
     """Render chat page."""
     
     st.title("💬 Chat Interactif")
@@ -31,7 +31,7 @@ def render(snapshot_date: str = ""):
     snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
     
     # Check if index exists
-    index_path = Path(Config.get_index_path(snapshot_date))
+    index_path = Path(Config.get_index_path(embedder, snapshot_date))
     if not index_path.exists():
         render_no_index_error()
         return
@@ -40,6 +40,7 @@ def render(snapshot_date: str = ""):
     if st.session_state.chat_engine is None:
         try:
             st.session_state.chat_engine = SeekEngine(
+                embedder=embedder,
                 snapshot_date=snapshot_date,
                 mode='chat'
             )
