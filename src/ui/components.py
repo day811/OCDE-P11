@@ -139,9 +139,9 @@ def render_stats(result: Dict):
         with col5:
             st.markdown('**Environnement**')
             st.json({
-                'Snapshot Index' : result.get('snapshot_index',""),
-                'LLM provider' : result['llm_provider'],
-                'LLM Model' : result['llm_model'],
+                'Snapshot Index' : result.get('snapshot_index',"").split('/')[-1],
+                'LLM Chat Model' : result['llm_chat_model'],
+                'LLM Embed Model' : result['llm_embed_model'],
                 'Top_k' : result['top_k'],
                 'Temperature' : result['temperature'],
             })
