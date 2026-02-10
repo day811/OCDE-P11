@@ -128,6 +128,7 @@ def render_stats(result: Dict):
     with st.expander("📈 Détails", expanded=False):
         col4,col5 = st.columns(2)
         with col4:
+#            download_button = st.button("📤 Enregistrer", use_container_width=True)
             st.markdown('**Statistiques**')
             st.json({
                 'total_tokens': total_tokens,
@@ -152,6 +153,14 @@ def render_stats(result: Dict):
                 'Département' : result['constraints']['dept'],
                 'Ville' : result['constraints']['city'],
             })
+#        if download_button:
+#            st.session_state.should_save_conversation = True
+        
+        # ✅ TRAITER SEULEMENT SI LE BOUTON A ÉTÉ CLIQUÉ
+        if st.session_state.should_save_conversation:
+            st.session_state.should_save_conversation = False  # Reset le flag
+            
+            
 
 
 

@@ -28,6 +28,9 @@ def render(snapshot_date: str = "", embedder : str=""):
     if 'should_submit_message' not in st.session_state:
         st.session_state.should_submit_message = False
 
+    if 'should_save_conversation' not in st.session_state:
+        st.session_state.should_save_conversation = False
+
     snapshot_date = snapshot_date or Config.DEV_SNAPSHOT_DATE
     
     # Check if index exists
