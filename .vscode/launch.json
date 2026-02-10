@@ -9,11 +9,11 @@
             "name": "Fetch data",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/vector/run_full_pipeline.py",
+            "program": "${workspaceFolder}/src/vector/run_pipeline.py",
             "console": "integratedTerminal",
             "args": [
                 "--max-pages",
-                "1",
+                "100",
 
             ],
         },
