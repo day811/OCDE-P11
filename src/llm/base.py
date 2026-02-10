@@ -4,9 +4,7 @@ from config import Config
 class BaseLLM(ABC):
     """Abstract base class for LLM providers"""
     
-    def __init__(self, provider, temperature: float = 0.7):
-        self.chat_model = Config.get_chat_model(provider)
-        self.embed_model = Config.get_embed_model(provider)
+    def __init__(self, temperature: float = 0.7):
         self.temperature = temperature
 
     @abstractmethod
