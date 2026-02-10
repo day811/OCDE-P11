@@ -18,7 +18,7 @@ class GeminiLLM(BaseLLM):
     
     def generate(self, prompt: str, temperature: float = 0.7) -> str:
         """Generate text using Gemini API"""
-        temp = temperature if temperature is not None else self.temperature
+        temperature  = temperature if temperature is not None else self.temperature
         response = self.client.models.generate_content(
             model= self.chat_model,
             contents= prompt,
