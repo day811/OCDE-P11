@@ -26,12 +26,13 @@ logger = logging.getLogger(__name__)
 class FaissRetrieverAdapter(BaseRetriever):
     """Adapter to use RAGRetriever as LangChain Retriever"""
     
-    def __init__(self, rag_retriever, query_parser,top_k):
+    def __init__(self, rag_retriever, query_parser,top_k, snapshot_date = None):
         super().__init__()
         # Lazy init pour éviter inspection prématurée
         object.__setattr__(self, '_rag_retriever', rag_retriever)  # Force set même avec __slots__
         object.__setattr__(self, '_query_parser', query_parser)
         object.__setattr__(self, '_top_k', top_k)
+        object.__setattr__(self, '_snapshot_date', snapshot_date)
 
     @property
     def rag_retriever(self):
@@ -45,11 +46,14 @@ class FaissRetrieverAdapter(BaseRetriever):
     def top_k(self):
         return getattr(self, '_top_k', None)
 
+    @property
+    def snapshot_date(self):
+        return getattr(self, '_snapshot_date', None)
    
     def _get_relevant_documents(self, query: str) -> List[Document]: # type: ignore
         """Get relevant documents from Faiss through RAGRetriever"""
         # Parse constraints from query
-        constraints = self.query_parser.parse_constraints(query) # type: ignore
+        constraints = self.query_parser.parse_constraints(query, self.snapshot_date) # type: ignore
         
         # Retrieve chunks using your existing RAGRetriever
         chunks = self.rag_retriever.retrieve( # type: ignore
@@ -180,7 +184,7 @@ Sois concis et pertinent.
                 'answer': result['result'],
                 'sources': result.get('source_documents', []),
                 'total_tokens': total_tokens,
-                'constraints' : QueryParser.parse_constraints(query=question),
+                'constraints' : QueryParser.parse_constraints(query=question, snapshot_date= self.snapshot_date),
                 'success': True
             }
         except Exception as e:
