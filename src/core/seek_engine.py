@@ -66,11 +66,17 @@ class SeekEngine:
             
         Returns:
             Dictionary with keys:
+            - 'quesion' : str - Inital query from user
             - 'answer': str - Main answer/response
             - 'sources': List[Dict] - Source events
             - 'total_tokens': int - Tokens used
             - 'execution_time': float - Query execution time in seconds
             - 'constraints': Dict - Extracted constraints (date, city)
+            - 'top_k' : int - Amount of wished results
+            - 'snapshot_index' : Pathname of the used index file
+            - 'llm_model' : str - Provider and model used for chat
+            - 'll_embed_model' : str - Provider and model used for embedding query
+            - 'temperature' : float - temperature used by llm_model
         """
         
         query_start = datetime.now()
