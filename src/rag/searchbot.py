@@ -26,7 +26,8 @@ class SearchBot:
         
         # ✅ INITIALIZE LLM FROM CONFIG
         self.search_llm = get_llm(
-            temperature=Config.LLM_TEMPERATURE
+            temperature=Config.LLM_TEMPERATURE,
+            provider=Config.LLM_PROVIDER
         )
         
         if embedder != Config.LLM_PROVIDER:
@@ -104,6 +105,7 @@ class SearchBot:
                         'title': chunk.get('title'),
                         'city': chunk.get('city'),
                         'dept': chunk.get('dept'),
+                        'address' : chunk.get('dept'),
                         'dates': dates,
                         'url': chunk.get('url'),
                         'distance': chunk.get('distance'),
@@ -117,19 +119,15 @@ class SearchBot:
             context_tokens = len(context.split()) * 1.3
             llm_tokens = len(answer.split()) * 1.3
             
-            get_accounting().log_search(
-                query_tokens=int(query_tokens),
-                context_tokens=int(context_tokens),
-                llm_tokens=int(llm_tokens),
-                operation='search'
-            )
-            
+           
             return {
                 'answer': answer,
                 'sources': sources,
                 'constraints': constraints,
                 'mode': 'search',
-                'total_tokens': int(query_tokens + context_tokens + llm_tokens),
+                'query_tokens' : query_tokens,
+                'context_tokens' : context_tokens,
+                'llm_tokens' : llm_tokens,
             }
         
         except Exception as e:
