@@ -3,6 +3,7 @@ import numpy as np
 from typing import List, Dict, Optional, Callable
 from datetime import datetime, timedelta
 from src.utils.utils import normalize_str, flat_date_constraints
+from src.utils.token_accounting import get_accounting
 
 class RAGEngine:
     """Retrieve and filter chunks from Faiss index"""
@@ -30,6 +31,13 @@ class RAGEngine:
         # Embed query
         query_text += flat_date_constraints(date_constraint)
         query_embedding = self.embed_function(query_text)
+
+        token_stats = len(query_text.split()) * 1.3 # Approximate
+        get_accounting().log_vectorization(
+            chunks_count= 1,
+            tokens_used=int(token_stats)
+        )
+
         query_vector = np.array([query_embedding], dtype=np.float32)
         
         # Search Faiss
