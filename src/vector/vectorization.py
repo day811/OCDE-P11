@@ -136,7 +136,7 @@ class EventVectorizer:
                 all_embeddings.append(batch_embeddings)
                
                 # ✅ Tracker les tokens par batch
-                batch_tokens = len(" ".join(batch_texts).split())  # Approximate
+                batch_tokens = len(" ".join(batch_texts).split()) * 1.3 # Approximate
                 token_stats['total_input_tokens'] += batch_tokens
                 token_stats['batches'].append({
                     'batch_id': batch_idx + 1,
