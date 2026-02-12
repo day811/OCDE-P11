@@ -6,7 +6,7 @@ Chat page - Interactive chat with LangChain
 import streamlit as st
 import logging
 from src.core.seek_engine import SeekEngine
-from src.ui.components import render_no_index_error, render_advanced_filters, render_error,render_stats
+from src.ui.components import render_no_index_error, render_advanced_filters, render_error,render_stats, render_sources
 from pathlib import Path
 from config import Config
 
@@ -57,8 +57,13 @@ def render(snapshot_date: str = "", embedder : str=""):
             st.markdown(f"**👤 Vous:** {message['content']}")
         elif message['role'] == 'assistant':
             st.markdown(f"**🤖 Assistant:** {message['answer']}")
+            if message['sources']:
+                render_sources(message['sources'], compact=True )
             if message.get('total_tokens'):
                 render_stats(message)
+            else:
+                st.info("Aucune source trouvée pour cette question.")
+
         elif message['role'] == 'error':
             st.error(message['content'])
   
@@ -114,7 +119,8 @@ def render(snapshot_date: str = "", embedder : str=""):
                 result = st.session_state.chat_engine.query(
                     question=user_input,
                     top_k=filters['top_k'],
-                    temperature=filters['temperature'] 
+                    temperature=filters['temperature'],
+                    session_id=st.session_state.session_id
                 )
                 
                 logger.debug(f"[chat.render] Query successful, answer length: {len(result.get('answer', ''))}")
@@ -123,7 +129,7 @@ def render(snapshot_date: str = "", embedder : str=""):
                 message['role'] = 'assistant'
                 # Ajouter la réponse
                 st.session_state.messages.append(message)
-                
+                user_input=""
                 logger.info(f"[chat.render] Message processed successfully")
             
             # ✅ Si succès, rafraîchir l'interface
