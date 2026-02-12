@@ -7,23 +7,26 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 class MistralLLM(BaseLLM):
+
+    NAME = "Mistral AI"
+    PROVIDER = "mistral"
+    CHAT_MODEL = Config.get_chat_model(PROVIDER)
+    EMBED_MODEL = Config.get_embed_model(PROVIDER)
+    API_KEY = Config.get_api_key(PROVIDER)
+
     def __init__(self, temperature: float = 0.7):
 
         super().__init__(temperature)
 
-        self.name = "Mistral AI"
-        self.provider = "mistral"
-        self.chat_model = Config.get_chat_model(self.provider)
-        self.embed_model = Config.get_embed_model(self.provider)
 
-        self.client = Mistral(api_key=Config.get_api_key(self.provider ))
-        logger.info(f"MistralLLM initialized - Chat: {self.chat_model}, Embed: {self.embed_model}, Temp: {self.temperature}")
+        self.client = Mistral(api_key=self.API_KEY)
+        logger.info(f"MistralLLM initialized - Chat: {self.CHAT_MODEL}, Embed: {self.EMBED_MODEL}, Temp: {self.temperature}")
     
     def generate(self, prompt: str, temperature: float = 0.7) -> str:
         """Generate text using Mistral chat API"""
         temp = temperature if temperature is not None else self.temperature
         response = self.client.chat.complete(
-            model=self.chat_model,
+            model=self.CHAT_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=temp
         )
@@ -35,14 +38,24 @@ class MistralLLM(BaseLLM):
         if isinstance(text, list):
             # Multiple texts → return list of embeddings
             response = self.client.embeddings.create(
-                model=self.embed_model,
+                model=self.EMBED_MODEL,
                 inputs=text
             )
             return [embed.embedding for embed in response.data]
         else:
             # Single text → return single embedding
             response = self.client.embeddings.create(
-                model=self.embed_model,
+                model=self.EMBED_MODEL,
                 inputs=[text]
             )
             return response.data[0].embedding
+    
+    @classmethod
+    def get_langchain(cls,temperature: float = 0.7):
+        from langchain_mistralai import ChatMistralAI
+
+        return ChatMistralAI(
+            model=cls.CHAT_MODEL, # type: ignore
+            api_key=cls.API_KEY,
+            temperature=temperature
+        )

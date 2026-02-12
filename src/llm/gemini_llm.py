@@ -7,23 +7,25 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 class GeminiLLM(BaseLLM):
+
+    NAME = "Gemnii AI"
+    PROVIDER = "gemini"
+    CHAT_MODEL = Config.get_chat_model(PROVIDER)
+    EMBED_MODEL = Config.get_embed_model(PROVIDER)
+    API_KEY = Config.get_api_key(PROVIDER)
+
     def __init__(self, temperature: float = 0.7):
 
         super().__init__(temperature)
 
-        self.name = "Gemnii AI"
-        self.provider = "gemini"
-        self.chat_model = Config.get_chat_model(self.provider)
-        self.embed_model = Config.get_embed_model(self.provider)
-    
-        self.client = genai.Client(api_key=Config.get_api_key(self.provider ))# type: ignore
-        logger.info(f"GeminiLLM initialized - Chat: {self.chat_model}, Embed: {self.embed_model}, Temp: {self.temperature}")
+        self.client = genai.Client(api_key=self.API_KEY)# type: ignore
+        logger.info(f"GeminiLLM initialized - Chat: {self.CHAT_MODEL}, Embed: {self.EMBED_MODEL}, Temp: {self.temperature}")
     
     def generate(self, prompt: str, temperature: float = 0.7) -> str:
         """Generate text using Gemini API"""
         temperature  = temperature if temperature is not None else self.temperature
         response = self.client.models.generate_content(
-            model= self.chat_model,
+            model= self.CHAT_MODEL,
             contents= prompt,
             config={
                 "temperature": self.temperature,
@@ -38,14 +40,24 @@ class GeminiLLM(BaseLLM):
         if isinstance(text, list):
             # Multiple texts → return list of embeddings
             response = self.client.models.embed_content( #type:ignore
-                model=self.embed_model,
+                model=self.EMBED_MODEL,
                 contents=text
             )
             return [embed.values for embed in response.embeddings]
         else:
             # Single text → return single embedding
             response = self.client.models.embed_content( #type:ignore
-                model=self.embed_model,
+                model=self.EMBED_MODEL,
                 contents=[text]
             )
             return response.embeddings[0].values
+
+    @classmethod
+    def get_langchain(cls,temperature: float = 0.7):
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(
+            model=cls.CHAT_MODEL, # type: ignore
+            google_api_key=cls.API_KEY,
+            temperature=temperature
+        )
