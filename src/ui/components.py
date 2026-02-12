@@ -69,7 +69,7 @@ def render_answer(answer: str, is_chat: bool = False):
     """, unsafe_allow_html=True)
 
 
-def render_sources(sources: List[Dict]):
+def render_sources(sources: List[Dict], compact:bool = False):
     """Render list of source events."""
     if not sources:
         st.info("Aucune source trouvée.")
@@ -77,20 +77,24 @@ def render_sources(sources: List[Dict]):
     
     st.markdown(f"### 📍 Sources ({len(sources)} trouvées)")
     
-    cols = st.columns(min(len(sources), 3))
+    nb_cols = 2 if compact else 3
+    cols = st.columns(min(len(sources), nb_cols))
     
     for idx, source in enumerate(sources):
         with cols[idx % len(cols)]:
-            render_source_card(source)
+            render_source_card(source, compact=compact)
 
 
-def render_source_card(source: Dict):
+def render_source_card(source: Dict, compact:bool = False):
     """Render single source card."""
     title = source.get('title', 'Sans titre')
     city = source.get('city', 'N/A')
     dates = source.get('dates', 'Date inconnue')
     url = source.get('url', '#')
+    address = source.get('address')
     distance = source.get('distance')
+
+    optional_br = " - " if compact else "<br>"
     
     relevance = ""
     if distance:
@@ -99,11 +103,9 @@ def render_source_card(source: Dict):
     
     st.markdown(f"""
     <div class="source-card">
-    <strong>{title}</strong><br>
-    📍 {city}<br>
-    📅 {dates}<br>
-    {relevance}
-    <br><br>
+    <strong>{title}</strong>{optional_br}📅 : {dates}<br>
+    📍 : {city}{optional_br}{address}
+    <br>{relevance}{optional_br}
     <a href="{url}" target="_blank">🔗 Voir l'événement</a>
     </div>
     """, unsafe_allow_html=True)
@@ -128,16 +130,6 @@ def render_stats(result: Dict):
     with st.expander("📈 Détails", expanded=False):
         col4,col5 = st.columns(2)
         with col4:
-#            download_button = st.button("📤 Enregistrer", use_container_width=True)
-            st.markdown('**Statistiques**')
-            st.json({
-                'total_tokens': total_tokens,
-                'execution_time': f"{exec_time:.3f}s",
-                'sources_count': sources_count,
-                'mode': result.get('mode', 'unknown'),
-                'timestamp': datetime.now().isoformat()
-            })
-        with col5:
             st.markdown('**Environnement**')
             st.json({
                 'Snapshot Index' : result.get('snapshot_index',"").split('/')[-1],
@@ -149,16 +141,36 @@ def render_stats(result: Dict):
 
             st.markdown('**Contraintes**')
             st.json({
+                'Question' : result['question'],
                 'Date' : flat_date_constraints(result['constraints']['date']),
                 'Département' : result['constraints']['dept'],
                 'Ville' : result['constraints']['city'],
+            })
+        with col5:
+#            download_button = st.button("📤 Enregistrer", use_container_width=True)
+
+            st.markdown('**Statistiques**')
+            avg_dst = int((1 - float(result.get('mean_distance', 1))) * 100)
+            query_tokens = result.get('query_tokens', 0)
+            context_tokens = result.get('context_tokens', 0)
+            llm_tokens = result.get('llm_tokens', 0)
+            st.json({
+                'total_tokens': total_tokens,
+                'query tokens': query_tokens,
+                'context tokens': context_tokens,
+                'answer tokens': llm_tokens,
+                'execution_time': f"{exec_time:.3f}s",
+                'average distance' : f"{avg_dst}%",
+                'sources_count': sources_count,
+                'mode': result.get('mode', 'unknown'),
+                'timestamp': datetime.now().isoformat()
             })
 #        if download_button:
 #            st.session_state.should_save_conversation = True
         
         # ✅ TRAITER SEULEMENT SI LE BOUTON A ÉTÉ CLIQUÉ
-        if st.session_state.should_save_conversation:
-            st.session_state.should_save_conversation = False  # Reset le flag
+#        if st.session_state.should_save_conversation:
+#            st.session_state.should_save_conversation = False  # Reset le flag
             
             
 
