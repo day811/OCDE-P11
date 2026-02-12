@@ -79,6 +79,7 @@ class FaissRetrieverAdapter(BaseRetriever):
                     'dept': chunk.get('dept'),
                     'city': chunk.get('city'),
                     'address': chunk.get('address'),
+                    'distance': chunk.get('distance'),
                     'dates': dates
                 }
             ))
@@ -143,7 +144,7 @@ Sois concis et pertinent.
             top_k=top_k
         )
 
-        self.retriever = FaissRetrieverAdapter(self.rag_retriever, self.query_parser, top_k=top_k)
+        self.retriever = FaissRetrieverAdapter(self.rag_retriever, self.query_parser, top_k=top_k, snapshot_date= self.snapshot_date)
         
         # Initialize LangChain RAG
         self.qa_chain = RetrievalQA.from_chain_type(
@@ -166,26 +167,23 @@ Sois concis et pertinent.
         total_tokens = 0
         try:
             result = self.qa_chain.invoke({'query': question}) # type: ignore
+                
+            sources  = [source.metadata for source in result['source_documents']]
+            result['sources'] = sources
             
             # Estimate tokens (query embedding + context + generation)
             query_tokens = len(question.split()) * 1.3  # rough estimate
-            context_tokens = len(str(result.get('source_documents', '')).split()) * 1.3
+            context_tokens = len(str(self.prompt).split()) * 1.3
             llm_tokens = len(result['result'].split()) * 1.3
-            total_tokens = int(query_tokens + context_tokens + llm_tokens)
 
-            accounting = get_accounting()
-            accounting.log_search(
-                query_tokens=int(query_tokens),
-                context_tokens=int(context_tokens),
-                llm_tokens=int(llm_tokens),
-                operation='chat'
-            )
             return {
                 'answer': result['result'],
-                'sources': result.get('source_documents', []),
-                'total_tokens': total_tokens,
+                'sources': sources,
                 'constraints' : QueryParser.parse_constraints(query=question, snapshot_date= self.snapshot_date),
-                'success': True
+                'query_tokens' : query_tokens,
+                'context_tokens' : context_tokens,
+                'llm_tokens' : llm_tokens,
+                 'success': True
             }
         except Exception as e:
             logger.error(f"LangChain RAG error: {e}")
