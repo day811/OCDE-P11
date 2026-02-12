@@ -100,7 +100,8 @@ labels = []
 embedders=[]
 for d in available_dates:
     (date_str, (marker, size, embedder)) = list(d.items())[0]
-    label = f"{date_str} ({size:.1f} MB)"
+    label = embedder[:1].upper()
+    label += f":{date_str} ({size:.1f} MB)"
     if marker:
         label += f"  -  {marker}"
     date_options.append(date_str)
