@@ -594,6 +594,10 @@ Le système extrait automatiquement les **contraintes temporelles** et **géogra
 | *"Spectacles demain"* | 11/02/2026 | - | - |
 | *"Événements dans le Gard"* | Prochains 30j | - | Gard |
 
+Lorsque l'on utilise une date de snapshot référencé 🔒 DEV dans le sélecteur de snapshot,
+la date du snapshot est considéré comme "aujourd'hui" et sert de référence au calcul de constraintes
+permettant la repdocutibilité des questions/réponses.
+
 ### Parsing date intelligent[file:6]
 
 ```python
