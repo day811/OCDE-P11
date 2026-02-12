@@ -24,10 +24,10 @@ class EventVectorizer:
     Convertit les événements textes en vecteurs indexés dans Faiss.
     """
     
-    def __init__(self, llm = None):
-        self.model_name = Config.LLM_PROVIDER
+    def __init__(self, provider = Config.LLM_PROVIDER):
 #        self.client = llm_api(api_key=api_key)
-        self.llm = llm or get_llm()
+        self.llm = get_llm(provider=provider)
+        self.model_name = self.llm.NAME
     
 
     def split_text(self, input_text, chunk_size: int = 500, level=0):
@@ -168,9 +168,8 @@ class EventVectorizer:
             get_accounting().log_tokens(
                 query_tokens=int(batch_tokens),
                 context_tokens=0,
-                llm_tokens=,
+                llm_tokens=0,
                 operation="vector",
-                session_id=session_id  # Assure alignement
             )
 
             

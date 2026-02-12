@@ -21,7 +21,7 @@ from src.vector.vectorization import EventVectorizer
 class PipelineOrchestrator:
     """Orchestrate complete data pipeline"""
     
-    def __init__(self, region: str, days_back: int, max_pages: int, snapshot_date = None):
+    def __init__(self, region: str, days_back: int, max_pages: int, snapshot_date = None, provider:str = Config.LLM_PROVIDER):
         """
         Initialize orchestrator.
         
@@ -30,6 +30,7 @@ class PipelineOrchestrator:
             days_back: Historical period (days)
             snapshot_date: Force specific snapshot date (YYYY-MM-DD)
         """
+        self.provider = provider
         self.region = region
         self.max_pages = max_pages
         self.days_back = days_back
@@ -107,7 +108,7 @@ class PipelineOrchestrator:
         """NOUVEAU : Vectoriser + Indexer dans Faiss"""
         print("\n[STEP 3] Vectorizing and indexing with Faiss...")
         try:
-            vectorizer = EventVectorizer()
+            vectorizer = EventVectorizer(provider=self.provider)
             
             index_path, metadata_path = vectorizer.run_full_vectorization_pipeline(
                 processed_path= self.processed_path,
@@ -193,6 +194,12 @@ Examples:
     )
     
     parser.add_argument(
+        "--provider",
+        default=Config.LLM_PROVIDER,
+        help=f"LLM utilisé mode (default: {Config.LLM_PROVIDER})"
+    )
+    
+    parser.add_argument(
         "--environment",
         default=Config.ENVIRONMENT,
         help=f"Execution mode (default: {Config.ENVIRONMENT})"
@@ -248,6 +255,7 @@ Examples:
         days_back=args.days,
         max_pages = args.max_pages,
         snapshot_date=args.snapshot_date,
+        provider=args.provider
     )
     
     # Handle vectorize-only command: run vectorization only using existing processed snapshot

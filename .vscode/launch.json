@@ -6,27 +6,30 @@
     "configurations": [
 
         {
-            "name": "Fetch data",
+            "name": "Fetch & vectorize data",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/vector/run_pipeline.py",
             "console": "integratedTerminal",
             "args": [
                 "--max-pages",
-                "100",
-
+                "1",
+                "--provider",
+                "gemini",
             ],
         },
         {
             "name": "Vectorize data",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/vector/run_full_pipeline.py",
+            "program": "${workspaceFolder}/src/vector/run_pipeline.py",
             "console": "integratedTerminal",
             "args": [
                 "--vectorize-only",
                 "--snapshot-date",
-                "2026-02-05"
+                "2026-02-12",
+                "--provider",
+                "gemini",
             ],
         },
         {
