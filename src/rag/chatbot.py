@@ -5,10 +5,9 @@ Interactive chatbot interface using LangChain RAG
 from src.rag.langchain_bridge import LangChainRAG
 from src.rag.engine import RAGEngine
 from config import Config
-from src.utils.token_accounting import get_accounting
 from src.llm.factory import get_llm
 import logging
-import time
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +15,7 @@ class ChatBot:
     """Chatbot for event recommendations"""
     
     def __init__(self, embedder:str, snapshot_date=Config.DEV_SNAPSHOT_DATE):
-#        import faiss
-#        import json
+
         from pathlib import Path
 
         self.snapshot_date = snapshot_date
