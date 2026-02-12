@@ -75,10 +75,9 @@ class SearchBot:
         try:
             # Step 1: Parse constraints
             constraints = self.query_parser.parse_constraints(question, snapshot_date = self.snapshot_date)
-            accounting = get_accounting()
            
             # Step 2: Retrieve chunks
-            chunks = self.rag_engine.retrieve(
+            chunks, embed_tokens = self.rag_engine.retrieve(
                 query_text=question,
                 k=top_k,
                 date_constraint=constraints['date'],
@@ -115,7 +114,7 @@ class SearchBot:
             
             
             # ✅ LOG TOKENS
-            query_tokens = len(question.split()) * 1.3
+            query_tokens = embed_tokens
             context_tokens = len(context.split()) * 1.3
             llm_tokens = len(answer.split()) * 1.3
             

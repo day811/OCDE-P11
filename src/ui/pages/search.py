@@ -96,7 +96,8 @@ def render(snapshot_date: str = "", embedder :str=""):
                 result = st.session_state.search_engine.query(
                     question=question,
                     top_k=filters['top_k'],
-                    temperature=filters['temperature']
+                    temperature=filters['temperature'],
+                    session_id=st.session_state.session_id
                 )
             
             render_answer(result.get('answer', ''), is_chat=False)

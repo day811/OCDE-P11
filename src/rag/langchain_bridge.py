@@ -33,6 +33,7 @@ class FaissRetrieverAdapter(BaseRetriever):
         object.__setattr__(self, '_query_parser', query_parser)
         object.__setattr__(self, '_top_k', top_k)
         object.__setattr__(self, '_snapshot_date', snapshot_date)
+        object.__setattr__(self, '_embed_tokens', 0)
 
     @property
     def rag_retriever(self):
@@ -50,19 +51,26 @@ class FaissRetrieverAdapter(BaseRetriever):
     def snapshot_date(self):
         return getattr(self, '_snapshot_date', None)
    
+    @property
+    def embed_tokens(self):
+        return getattr(self, '_embed_tokens', None)
+   
+
     def _get_relevant_documents(self, query: str) -> List[Document]: # type: ignore
         """Get relevant documents from Faiss through RAGRetriever"""
         # Parse constraints from query
         constraints = self.query_parser.parse_constraints(query, self.snapshot_date) # type: ignore
         
         # Retrieve chunks using your existing RAGRetriever
-        chunks = self.rag_retriever.retrieve( # type: ignore
+        chunks, embed_tokens = self.rag_retriever.retrieve( # type: ignore
             query_text=query,
             date_constraint=constraints['date'],
             city_constraint=constraints['city'],
             dept_constraint=constraints['dept']
         )
-        
+        object.__setattr__(self, '_embed_tokens', embed_tokens)
+
+#        self.embed_tokens = embed_tokens
         # Convert chunks to LangChain Documents
         chunks = chunks[:self.top_k]
         documents = []
@@ -170,16 +178,16 @@ Sois concis et pertinent.
                 
             sources  = [source.metadata for source in result['source_documents']]
             result['sources'] = sources
-            
+
             # Estimate tokens (query embedding + context + generation)
-            query_tokens = len(question.split()) * 1.3  # rough estimate
+            query_tokens = self.retriever.embed_tokens  # rough estimate
             context_tokens = len(str(self.prompt).split()) * 1.3
             llm_tokens = len(result['result'].split()) * 1.3
 
             return {
                 'answer': result['result'],
                 'sources': sources,
-                'constraints' : QueryParser.parse_constraints(query=question, snapshot_date= self.snapshot_date),
+                'constraints' : self.query_parser.parse_constraints(query=question, snapshot_date= self.snapshot_date),
                 'query_tokens' : query_tokens,
                 'context_tokens' : context_tokens,
                 'llm_tokens' : llm_tokens,

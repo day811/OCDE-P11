@@ -93,12 +93,13 @@ class SeekEngine:
             total_distance = sum([source['distance'] for source in result['sources']])
                         # ✅ LOG TOKENS
             
-            accounting = get_accounting()
-            get_accounting().log_search(
-                query_tokens=int(result['query_tokens']),
-                context_tokens=int(result['context_tokens']),
-                llm_tokens=int(result['llm_tokens']),
-                operation=self.mode
+            accounting = get_accounting(session_id=session_id)
+            accounting.log_tokens(
+                query_tokens=int(result.get("query_tokens", 0)),
+                context_tokens=int(result.get("context_tokens", 0)),
+                llm_tokens=int(result.get("llm_tokens", 0)),
+                operation=self.mode,
+                session_id=session_id  # Assure alignement
             )
             total_tokens = int(result['query_tokens']) + int(result['context_tokens']) + int(result['llm_tokens'])
             result['total_tokens']= int(total_tokens)

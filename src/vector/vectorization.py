@@ -122,7 +122,7 @@ class EventVectorizer:
         try:
             # Process in batches
             num_batches = (total_chunks + batch_size - 1) // batch_size
-            
+            batch_tokens=0
             for batch_idx in range(num_batches):
                 start_idx = batch_idx * batch_size
                 end_idx = min(start_idx + batch_size, total_chunks)
@@ -165,10 +165,14 @@ class EventVectorizer:
                 f"Shape: {embeddings.shape} | "
                 f"Avg: {token_stats['total_input_tokens'] / total_chunks:.1f} tok/chunk"
             )
-            get_accounting().log_vectorization(
-                chunks_count= total_chunks,
-                tokens_used=token_stats['total_input_tokens']
+            get_accounting().log_tokens(
+                query_tokens=int(batch_tokens),
+                context_tokens=0,
+                llm_tokens=,
+                operation="vector",
+                session_id=session_id  # Assure alignement
             )
+
             
             return embeddings
                 

@@ -1,6 +1,6 @@
 # src/rag/retriever.py
 import numpy as np
-from typing import List, Dict, Optional, Callable
+from typing import List, Dict, Optional, Callable, Tuple
 from datetime import datetime, timedelta
 from src.utils.utils import normalize_str, flat_date_constraints
 from src.utils.token_accounting import get_accounting
@@ -23,7 +23,7 @@ class RAGEngine:
         date_constraint: Optional[tuple[datetime,int]] = None,
         city_constraint: Optional[str] = None,
         dept_constraint: Optional[str] = None,
-    ) -> List[Dict]:
+    ) -> Tuple[List[Dict], int] :
         """Retrieve and filter chunks"""
         
         if k == 0:
@@ -32,11 +32,7 @@ class RAGEngine:
         query_text += flat_date_constraints(date_constraint)
         query_embedding = self.embed_function(query_text)
 
-        token_stats = len(query_text.split()) * 1.3 # Approximate
-        get_accounting().log_vectorization(
-            chunks_count= 1,
-            tokens_used=int(token_stats)
-        )
+        embed_tokens = int(len(query_text.split()) * 1.3) # Approximate
 
         query_vector = np.array([query_embedding], dtype=np.float32)
         
@@ -64,7 +60,7 @@ class RAGEngine:
             dept_constraint=dept_constraint,
        )
         
-        return filtered_results[:k]
+        return (filtered_results[:k], embed_tokens)
     
     def _filter_chunks(
         self,
