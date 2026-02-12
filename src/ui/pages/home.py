@@ -42,15 +42,21 @@ def render(snapshot_date: str = "", embedder: str=""):
 
     with col2:
         processed_path = Config.get_processed_snapshot_path(snapshot_date)
+        if snapshot_date == Config.DEV_SNAPSHOT_DATE:
+            str_today = snapshot_date
+            today = datetime.strptime(snapshot_date, "%Y-%m-%d")
+        else:
+            today = datetime.now()
+            str_today = today.strftime("%Y-%m-%d")
         df = pd.read_json(processed_path)
         nb_events = df.shape[0]
-        mask = df['first_date']> datetime.now().isoformat()
+        mask = df['first_date']> today.isoformat()
         nb_future_events = df[mask].shape[0]
         st.markdown("🤖 Dataset")
         st.markdown( Config.BASE_URL)
-        st.metric("📊 Région", "Occitanie")
+        st.metric("📊 Région", Config.REGION)
         st.metric("🎭 Total Événements", nb_events)
-        st.metric("🎭 Événements à venir ", nb_future_events)
+        st.metric(f"🎭 Événements après today({str_today}) : ", nb_future_events)
     
     st.markdown("---")
     
