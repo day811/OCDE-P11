@@ -181,8 +181,9 @@ Sois concis et pertinent.
 
             # Estimate tokens (query embedding + context + generation)
             query_tokens = self.retriever.embed_tokens  # rough estimate
-            context_tokens = len(str(self.prompt).split()) * 1.3
-            llm_tokens = len(result['result'].split()) * 1.3
+            context_string = " ".join([str(source) for source in sources]) + self.prompt.template
+            context_tokens = len(context_string.split()) * 1.3
+            llm_tokens = len(result['result'].split(' ')) * 1.3
 
             return {
                 'answer': result['result'],
