@@ -4,6 +4,7 @@ sources/*
 data/*
 ~lock.*
 chunks.json
+.vscode/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
