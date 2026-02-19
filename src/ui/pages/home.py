@@ -4,7 +4,7 @@ Home page - Dashboard and introduction
 """
 
 import streamlit as st
-from config import Config
+from src.config import Config
 from pathlib import Path
 import pandas as pd
 from datetime import datetime

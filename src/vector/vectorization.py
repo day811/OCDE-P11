@@ -11,7 +11,7 @@ from src.utils.token_accounting import get_accounting
 import logging
 
 import faiss
-from config import Config
+from src.config import Config
 import re
 import time
 
@@ -202,7 +202,7 @@ class EventVectorizer:
         """
         Sauvegarder l'index Faiss.
         """
-        from config import Config
+        from src.config import Config
         
         index_path = Config.get_index_path(snapshot_date)
         Path(index_path).parent.mkdir(parents=True, exist_ok=True)
@@ -220,7 +220,7 @@ class EventVectorizer:
             events: List of events to lookup metadata by uid
             snapshot_date: Date for path generation
         """
-        from config import Config
+        from src.config import Config
         
         metadata_path = Config.get_metadata_path(provider=self.llm.NAME, snapshot_date=snapshot_date)
         Path(metadata_path).parent.mkdir(parents=True, exist_ok=True)

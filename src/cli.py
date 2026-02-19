@@ -5,7 +5,7 @@ from datetime import datetime
 from src.rag.searchbot import SearchBot
 from src.utils.token_accounting import get_accounting
 from src.utils.utils import flat_date_constraints
-from config import Config
+from src.config import Config
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
     """CLI search command"""
     try:
-        engine = SearchBot(snapshot_date=snapshot_date)
+        engine = SearchBot(embedder= Config.LLM_PROVIDER, snapshot_date=snapshot_date)
         result = engine.answer_question(question=question, top_k=top_k)
         
         print("\n" + "="*80)
@@ -47,7 +47,7 @@ def search_cli(question: str, top_k: int = 5, snapshot_date: str = ""):
             print(f"   🔗 {source['url']}")
         
        # Afficher rapport tokens
-        get_accounting().print_report()
+        #get_accounting().print_report()
         
         print(f"\n⏱️ Execution time: {result['execution_time']:.3f}s")
         print("="*80 + "\n")

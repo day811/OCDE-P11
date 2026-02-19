@@ -10,7 +10,7 @@ from datetime import datetime
 from src.rag.searchbot import SearchBot
 from src.rag.chatbot import ChatBot
 from src.utils.token_accounting import get_accounting
-from config import Config
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

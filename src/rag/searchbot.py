@@ -10,7 +10,7 @@ from datetime import datetime
 from src.rag.query_parser import QueryParser
 from src.rag.engine import RAGEngine
 from src.utils.token_accounting import get_accounting
-from config import Config
+from src.config import Config
 from src.llm.factory import get_llm
 
 

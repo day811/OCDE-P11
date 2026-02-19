@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import Config
+from src.config import Config
 from src.vector.preprocessing import EventPreprocessor
 
 

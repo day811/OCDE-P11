@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from config import Config
+from src.config import Config
 
 class BaseLLM(ABC):
     """Abstract base class for LLM providers"""

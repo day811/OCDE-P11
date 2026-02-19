@@ -2,7 +2,7 @@ from typing import List
 from src.llm.base import BaseLLM
 from google import genai
 import logging
-from config import Config
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

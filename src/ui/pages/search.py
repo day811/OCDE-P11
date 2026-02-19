@@ -16,7 +16,7 @@ from src.ui.components import (
     render_no_index_error
 )
 from pathlib import Path
-from config import Config
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

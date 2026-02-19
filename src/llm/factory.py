@@ -4,7 +4,7 @@ from src.llm.gemini_llm import GeminiLLM
 
 
 import logging
-from config import Config
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

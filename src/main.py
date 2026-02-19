@@ -4,7 +4,7 @@ import streamlit as st
 import logging
 from datetime import datetime
 from pathlib import Path
-from config import Config
+from src.config import Config
 
 # Configuration logging
 logging.basicConfig(
@@ -88,7 +88,7 @@ st.sidebar.markdown("---")
 # Configuration snapshot date en sidebar
 st.sidebar.markdown("### ⚙️ Configuration")
 
-from config import Config
+from src.config import Config
 llm_provider = st.sidebar.selectbox(
     "Provider",
     options=Config.ALL_LLM

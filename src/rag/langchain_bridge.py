@@ -14,7 +14,7 @@ from src.rag.query_parser import QueryParser
 
 from typing import List, Callable
 import logging
-from config import Config
+from src.config import Config
 import faiss
 import json
 from pathlib import Path

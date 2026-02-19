@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 from typing import Optional, Dict
 from src.utils.utils import normalize_str
-from config import Config
+from src.config import Config
 import pandas as pd
 
 class QueryParser:

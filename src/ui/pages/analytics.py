@@ -8,7 +8,7 @@ import pandas as pd
 import json
 import logging
 from pathlib import Path
-from config import Config
+from src.config import Config
 from src.utils.token_accounting import get_accounting
 
 logger = logging.getLogger(__name__)

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 from urllib.parse import urlencode
 import logging
-from config import Config
+from src.config import Config
 
 
 # Configure logging

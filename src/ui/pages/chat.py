@@ -8,7 +8,7 @@ import logging
 from src.core.seek_engine import SeekEngine
 from src.ui.components import render_no_index_error, render_advanced_filters, render_error,render_stats, render_sources
 from pathlib import Path
-from config import Config
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Tuple, Optional
 import logging
-from config import Config
+from src.config import Config
 
 
 

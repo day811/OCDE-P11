@@ -12,7 +12,7 @@ import argparse
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from config import Config
+from src.config import Config
 from src.vector.data_fetcher import fetch_events_snapshot
 from src.vector.preprocessing import preprocess_snapshot
 from src.vector.vectorization import EventVectorizer
