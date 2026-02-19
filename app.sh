@@ -10,6 +10,6 @@ echo ""
 echo "=========================================="
 echo ""
 
-streamlit run main.py \
+streamlit run src/main.py \
     --logger.level=info \
     --client.showErrorDetails=true 
