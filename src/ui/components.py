@@ -7,6 +7,7 @@ import streamlit as st
 from typing import Dict, List, Optional
 from src.utils.utils import flat_date_constraints
 from datetime import datetime
+import json 
 
 
 def render_question_input(
@@ -165,14 +166,13 @@ def render_stats(result: Dict):
                 'mode': result.get('mode', 'unknown'),
                 'timestamp': datetime.now().isoformat()
             })
-#        if download_button:
-#            st.session_state.should_save_conversation = True
-        
-        # ✅ TRAITER SEULEMENT SI LE BOUTON A ÉTÉ CLIQUÉ
-#        if st.session_state.should_save_conversation:
-#            st.session_state.should_save_conversation = False  # Reset le flag
-            
-            
+            st.download_button(
+                label="💾 JSON complet",
+                data=json.dumps(result, default=str, ensure_ascii=False, indent=2),
+                file_name=f"puls_result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                use_container_width=True,
+            )
 
 
 
