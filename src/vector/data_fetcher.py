@@ -58,7 +58,8 @@ class OpenAgendaFetcher:
             "limit": limit,                  # Items per page
             "offset": (page - 1) * limit,   # Pagination offset
             "select" :  field_select ,
-            "where" : f"{loc_condition} AND {date_condition}"
+            "where" : f"{loc_condition} AND {date_condition}",
+            "order" : "firstdate_begin+DESC"
        }
         
         query_string = urlencode(params)
@@ -131,6 +132,11 @@ class OpenAgendaFetcher:
         page = 1
         
         while True:
+            offset = (page - 1) * limit
+            if offset >= 10000:
+                logger.warning("API offset limit reached (offset >= 10000). Stopping.")
+                break
+
             # Fetch page
             events = self.fetch_page(page=page, limit=limit)
             
