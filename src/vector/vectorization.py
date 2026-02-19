@@ -27,7 +27,6 @@ class EventVectorizer:
     def __init__(self, provider = Config.LLM_PROVIDER):
 #        self.client = llm_api(api_key=api_key)
         self.llm = get_llm(provider=provider)
-        self.model_name = self.llm.NAME
     
 
     def split_text(self, input_text, chunk_size: int = 500, level=0):
@@ -110,7 +109,7 @@ class EventVectorizer:
         texts = [chunk['text'] for chunk in chunks]
         total_chunks = len(texts)
         
-        logger.info(f"Vectorizing {total_chunks} chunks with {self.model_name}...")
+        logger.info(f"Vectorizing {total_chunks} chunks with {self.llm.NAME}...")
         logger.info(f"Batch size: {batch_size} chunks per API call")
         
         all_embeddings = []
@@ -223,7 +222,7 @@ class EventVectorizer:
         """
         from config import Config
         
-        metadata_path = Config.get_metadata_path(snapshot_date)
+        metadata_path = Config.get_metadata_path(provider=self.llm.NAME, snapshot_date=snapshot_date)
         Path(metadata_path).parent.mkdir(parents=True, exist_ok=True)
         
         # Build event lookup by uid
