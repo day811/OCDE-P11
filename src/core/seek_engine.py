@@ -81,6 +81,7 @@ class SeekEngine:
         """
         
         query_start = datetime.now()
+        result={}
         try:
             if self.mode == 'search':
                 result = self._handle_search(question, top_k, temperature)
@@ -107,9 +108,9 @@ class SeekEngine:
             result['mean_distance'] = (total_distance/nb_answer) if nb_answer else None
             result['execution_time'] = execution_time # type: ignore
             result['question'] = question # type: ignore
-            result['snapshot_index'] = Config.get_index_path(snapshot_date=self.snapshot_date,provider=self.embedder) # type: ignore
+            result['snapshot_index'] = Config.get_index_path(provider=self.embedder, snapshot_date=self.snapshot_date) 
             result['llm_embed_model'] = f"{self.seek_engine.embed_llm.NAME}:{self.seek_engine.embed_llm.EMBED_MODEL}"
-            logger.info(f"Query completed in {execution_time:.3f}s | Tokens: {result.get('total_tokens', 0)}") # type: ignore
+            logger.info(f"Query completed in {execution_time:.3f}s | Tokens: {result.get('total_tokens', 0)}") 
             
             return result # type: ignore
         
@@ -127,6 +128,7 @@ class SeekEngine:
             top_k=top_k,
             temperature=temperature
         )
+
         result['llm_chat_model'] = f"{self.seek_engine.search_llm.NAME}:{self.seek_engine.search_llm.CHAT_MODEL}"
         result['temperature'] = self.seek_engine.search_llm.temperature
         result['top_k'] = self.seek_engine.rag_engine.top_k
