@@ -25,7 +25,7 @@ class ChatBot:
         self.embed_llm = get_llm(provider=embedder)
  
         # Initialize LangChain RAG
-        self.rag_engine = LangChainRAG(embedder, embed_function= self._embed_query )
+        self.rag_engine = LangChainRAG(embedder, embed_function= self._embed_query, snapshot_date= snapshot_date )
         
         logger.info("ChatBot initialized with LangChain RAG")
     
