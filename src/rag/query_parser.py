@@ -46,6 +46,12 @@ class QueryParser:
             days = int(match.group(1))
             return (today + timedelta(days=days), 0)
         
+        # Next weekend
+        if re.search(r'\b(week[\- ]?end)\sprochain', query_lower):
+            days_until_saturday = (5 - today.weekday()) % 7 or 7
+            
+            return (today + timedelta(days=days_until_saturday+7) ,1)
+        
         # This weekend
         if re.search(r'\b(ce week[\- ]?end)\b', query_lower):
             days_until_saturday = (5 - today.weekday()) % 7 or 7
