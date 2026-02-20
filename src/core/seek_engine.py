@@ -104,7 +104,7 @@ class SeekEngine:
             )
             total_tokens = int(result['query_tokens']) + int(result['context_tokens']) + int(result['llm_tokens'])
             result['total_tokens']= int(total_tokens)
-
+            result['timestamp'] = datetime.now().strftime('%Y%m%d_%H%M%s')
             result['mean_distance'] = (total_distance/nb_answer) if nb_answer else None
             result['execution_time'] = execution_time # type: ignore
             result['question'] = question # type: ignore

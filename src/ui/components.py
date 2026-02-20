@@ -151,10 +151,12 @@ def render_stats(result: Dict):
 #            download_button = st.button("📤 Enregistrer", use_container_width=True)
 
             st.markdown('**Statistiques**')
-            avg_dst = int((1 - float(result.get('mean_distance', 1))) * 100)
+            mean_distance = result.get('mean_distance', None)
+            avg_dst = int((1 - float(mean_distance)) * 100) if mean_distance else "---"
             query_tokens = result.get('query_tokens', 0)
             context_tokens = result.get('context_tokens', 0)
             llm_tokens = result.get('llm_tokens', 0)
+            timestamp = result.get('timestamp', datetime.now().strftime('%Y%m%d_%H%M%s'))
             st.json({
                 'total_tokens': total_tokens,
                 'query tokens': query_tokens,
@@ -164,7 +166,7 @@ def render_stats(result: Dict):
                 'average distance' : f"{avg_dst}%",
                 'sources_count': sources_count,
                 'mode': result.get('mode', 'unknown'),
-                'timestamp': datetime.now().isoformat()
+                'timestamp': timestamp
             })
             st.download_button(
                 label="💾 JSON complet",
@@ -172,6 +174,7 @@ def render_stats(result: Dict):
                 file_name=f"puls_result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
                 mime="application/json",
                 use_container_width=True,
+                key=f"dl_{st.session_state.session_id}_{timestamp}"
             )
 
 
