@@ -1,6 +1,4 @@
-Je vais maintenant rédiger un README.md complet et professionnel pour votre projet, en analysant le code fourni et en respectant les exigences des documents de mission. [ppl-ai-file-upload.s3.amazonaws](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_cae1b248-9511-4e7b-9c4e-85caeb63e5af/074e7c59-fe78-4716-bcd9-f9f2c859ff2c/Mission-livrables.pdf)
 
-```markdown
 # 🎭 Puls-Events - RAG Cultural Events Assistant
 
 **Projet OpenClassrooms P11** - Système RAG (Retrieval-Augmented Generation) pour la recommandation d'événements culturels en Occitanie
