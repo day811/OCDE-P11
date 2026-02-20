@@ -114,7 +114,8 @@ class LangChainRAG:
         metadata_path = Config.get_metadata_path(embedder, self.snapshot_date)
         
         self.faiss_index = faiss.read_index(index_path)
-        
+        logger.info(f"Faiss indexes loaded - provider :{embedder} - date : {snapshot_date}")
+
         with open(metadata_path, 'r', encoding='utf-8') as f:
             self.metadata = json.load(f)
 
@@ -144,6 +145,7 @@ Sois concis et pertinent.
         # Initialize Mistral LLM
         self.llm = get_langchain_llm(temperature)
         self.temperature=temperature
+        self.top_k = top_k
         
         self.rag_retriever = RAGEngine(
             faiss_index=self.faiss_index,
@@ -169,7 +171,7 @@ Sois concis et pertinent.
     def answer(self, question: str, top_k: int =5, temperature: float = 0.7 ) -> dict:
         """Answer a question using LangChain RAG"""
         
-        if self.qa_chain is None or temperature !=  self.temperature:
+        if self.qa_chain is None or temperature !=  self.temperature or top_k != self.top_k:
             self.make_chain_retriever(top_k=top_k, temperature=temperature)
 
         total_tokens = 0
@@ -182,8 +184,8 @@ Sois concis et pertinent.
             # Estimate tokens (query embedding + context + generation)
             query_tokens = self.retriever.embed_tokens  # rough estimate
             context_string = " ".join([str(source) for source in sources]) + self.prompt.template
-            context_tokens = len(context_string.split()) * 1.3
-            llm_tokens = len(result['result'].split(' ')) * 1.3
+            context_tokens = int(len(context_string.split()) * 1.3)
+            llm_tokens = int(len(result['result'].split(' ')) * 1.3)
 
             return {
                 'answer': result['result'],
