@@ -1,0 +1,28 @@
+{
+  "answer": "L'avant-première du film **\"Compostelle\"** a eu lieu le **10 mars 2024** à **Toulouse** (Cinéma Utopia), en présence du réalisateur **James Gray** et de l'acteur **Ben Foster**. Ce film, inspiré du pèlerinage vers Saint-Jacques-de-Compostelle, mêle aventure et introspection.\n\n**Recommandation** :\nSi vous êtes passionné par les récits de voyage ou les films intimistes, ce film pourrait vous plaire. Pour des événements similaires en Occitanie, surveillez les festivals comme **Cinélatino** (Toulouse) ou **Rencontres du Cinéma** (Montpellier).\n\n*Pour plus de détails, consultez le site du cinéma Utopia ou les réseaux sociaux du film.*",
+  "sources": [],
+  "constraints": {
+    "date": [
+      "0026-03-10 00:00:00",
+      0
+    ],
+    "city": null,
+    "dept": null
+  },
+  "query_tokens": 23,
+  "context_tokens": 44,
+  "llm_tokens": 113,
+  "success": true,
+  "mode": "chat",
+  "llm_chat_model": "ChatMistralAI:mistral-small",
+  "temperature": 0.7,
+  "top_k": 5,
+  "total_tokens": 180,
+  "timestamp": "20260220_18361771608994",
+  "mean_distance": null,
+  "execution_time": 2.254097,
+  "question": "trouve moi des informations sur  l'avant-première du film \"compostelle\" le 10-3",
+  "snapshot_index": "/home/yves/Documents/DEV/OCDE/OCDE-P11/data/indexes/mistral_faiss_index_2026-02-19.bin",
+  "llm_embed_model": "Mistral AI:mistral-embed",
+  "role": "assistant"
+}

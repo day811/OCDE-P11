@@ -1,0 +1,84 @@
+{
+  "answer": "Voici une sélection d'activités adaptées aux enfants à Toulouse :\n\n1. **Pour les tout-petits (0-3 ans)** :\n   - *\"Les bibliothécaires racontent...\"* : Lectures interactives les samedis (10h-10h30) à la bibliothèque de Micoulaud.\n   - *\"Les Bébés bouquinent\"* : Lectures les mercredis (horaires variables) à la bibliothèque de Reynerie (inscription requise).\n\n2. **Pour les 2-7 ans** :\n   - *Le Quai des Petits* : Espace d'exploration ludique et scientifique (réouverture le 21 février, réservation en ligne).\n\n3. **Pour les 8-12 ans** :\n   - *Graines de lecteurs* : Club de lecture les mercredis (15h) à la bibliothèque de la Dépêche.\n\n4. **Expositions & événements** :\n   - *L'effet Matilda* : Exposition interactive sur les femmes scientifiques (3-14 mars 2026) dans les médiathèques de Fenouillet et Saint-Jory.\n\n**Conseil** : Réservez à l'avance pour les activités nécessitant inscription (ex : *Les Bébés bouquinent*). Profitez des samedis et mercredis pour alterner entre lectures et exploration scientifique !\n\n*Plus d'infos* : Vérifiez les liens fournis pour les détails pratiques.",
+  "sources": [
+    {
+      "url": "https://openagenda.com/bibliotheques-de-toulouse/events/les-bibliothecaire-racontent-aussi-le-samedi",
+      "title": "Les bibliothécaire racontent... aussi le samedi",
+      "description": "Les bibliothécaire racontent... aussi le samedi. Lectures pour les tout petits (0-3 ans). Lectures pour les tout petits (0-3 ans) \n \n Samedi 10 janvier \n samedi 24 janvier \n samedi 7 février \n samedi 21 février \n samedi 7 mars \n samedi 21 mars \n \n 10h à 10h30. Toulouse. 1 place Micoulaud 31200 Toulouse. Haute-Garonne. ",
+      "event_id": "71154469",
+      "dept": "Haute-Garonne",
+      "city": "Toulouse",
+      "address": "1 place Micoulaud 31200 Toulouse",
+      "distance": 0.3452017605304718,
+      "dates": "21/02/2026, 10:00:00 et 07/03/2026, 10:00:00 et 21/03/2026, 10:00:00"
+    },
+    {
+      "url": "https://openagenda.com/bibliotheques-de-toulouse/events/les-bebes-bouquinent-4817171",
+      "title": "Les Bébés bouquinent",
+      "description": "Les Bébés bouquinent. lectures pour les 0-3 ans. Les Bébés bouquinent Inscription au 05 81 91 79 40 \n \n Mercredi 7 janvier \n Mercredi 21 janvier \n Mercredi 4 février \n Mercredi 18 février \n Mercredi 11 mars \n Mercredi 25 mars. Toulouse. 37 Avenue de Reynerie, 31100 Toulouse, France. Haute-Garonne. ",
+      "event_id": "92923746",
+      "dept": "Haute-Garonne",
+      "city": "Toulouse",
+      "address": "37 Avenue de Reynerie, 31100 Toulouse, France",
+      "distance": 0.3457076847553253,
+      "dates": "11/03/2026, 10:30:00"
+    },
+    {
+      "url": "https://openagenda.com/bibliotheques-de-toulouse/events/graines-de-lecteurs-9418860",
+      "title": "Graines de lecteurs",
+      "description": "Graines de lecteurs. Pour les 8-12 ans.. Mercredi 28 janvier - 15h \n Mercredi 18 février - 15h \n Mercredi 18 mars - 15h \n \n Club de lecture Graines de lecteurs Pour les 8-12 ans. Toulouse. 3 Avenue de la Dépêche, 31100 Toulouse, France. Haute-Garonne. ",
+      "event_id": "9153926",
+      "dept": "Haute-Garonne",
+      "city": "Toulouse",
+      "address": "3 Avenue de la Dépêche, 31100 Toulouse, France",
+      "distance": 0.3464534878730774,
+      "dates": "18/03/2026, 15:00:00"
+    },
+    {
+      "url": "https://openagenda.com/planlibre/events/dans-les-coulisses-dun-metier-pas-comme-les-autres-instructrice-dastronautes",
+      "title": "Dans les coulisses d’un métier pas comme les autres, instructrice d’astronautes !",
+      "description": "proposé à à la Maison des chômeurs Partage Faourette de Toulouse le  12 mars 2026 à 12h  -  plus d'infos  \n  L'exposition L'effet Matilda :  dans les médiathèques de Fenouillet ( plus d'infos ) et de Saint-Jory ( plus d'infos ), ainsi que des rencontres proposées avec l’association Femmes &amp; Sciences - du  3 au 14 mars 2026, Gratuit, entrée libre. Toulouse. Allée Matilda, 31000 Toulouse. Haute-Garonne. ",
+      "event_id": "47318176",
+      "dept": "Haute-Garonne",
+      "city": "Toulouse",
+      "address": "Allée Matilda, 31000 Toulouse",
+      "distance": 0.3485475480556488,
+      "dates": "10/03/2026, 18:30:00"
+    },
+    {
+      "url": "https://openagenda.com/planlibre/events/sinspirer-du-vivant",
+      "title": "S'inspirer du vivant : ateliers des vacances d'hiver",
+      "description": "Les propositions s'exposeront dans une création collective au fil des jours, pour montrer au public ces nouvelles créations inspirantes ! \n  Le Quai des Petits revient aussi à partir du 21 février !  \n Venez en famille au Quai des Petits, l’espace d’exploration pour les 2-7 ans. Profitez de la réouverture du Quai des Savoirs pour  réserver vos créneaux en ligne. Plus d'infos  \n  Billetterie. Gratuit, entrée libre. Toulouse. Allée Matilda, 31000 Toulouse. Haute-Garonne. ",
+      "event_id": "20136584",
+      "dept": "Haute-Garonne",
+      "city": "Toulouse",
+      "address": "Allée Matilda, 31000 Toulouse",
+      "distance": 0.3485700786113739,
+      "dates": "21/02/2026, 14:30:00 et 22/02/2026, 14:30:00 et 24/02/2026, 14:30:00 et 25/02/2026, 14:30:00 et 26/02/2026, 14:30:00 et 27/02/2026, 14:30:00 et 28/02/2026, 14:30:00 et 01/03/2026, 14:30:00 et 03/03/2026, 14:30:00 et 04/03/2026, 14:30:00 et 05/03/2026, 14:30:00 et 06/03/2026, 14:30:00 et 07/03/2026, 14:30:00 et 08/03/2026, 14:30:00"
+    }
+  ],
+  "constraints": {
+    "date": [
+      "2026-02-19 00:00:00",
+      30
+    ],
+    "city": "TOULOUSE",
+    "dept": null
+  },
+  "query_tokens": 27,
+  "context_tokens": 674,
+  "llm_tokens": 213,
+  "success": true,
+  "mode": "chat",
+  "llm_chat_model": "ChatMistralAI:mistral-small",
+  "temperature": 0.7,
+  "top_k": 5,
+  "total_tokens": 914,
+  "timestamp": "20260220_18321771608746",
+  "mean_distance": 0.34689611196517944,
+  "execution_time": 3.727654,
+  "question": "Je cherche des activités pour les enfants sur toulouse",
+  "snapshot_index": "/home/yves/Documents/DEV/OCDE/OCDE-P11/data/indexes/mistral_faiss_index_2026-02-19.bin",
+  "llm_embed_model": "Mistral AI:mistral-embed",
+  "role": "assistant"
+}
