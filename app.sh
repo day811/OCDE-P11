@@ -10,6 +10,9 @@ echo ""
 echo "=========================================="
 echo ""
 
+cd "$(dirname "$0")"          # ← Va à la racine du projet
+export PYTHONPATH="${PWD}"    # ← Ajoute la racine au PYTHONPATH
+
 streamlit run src/main.py \
     --logger.level=info \
     --client.showErrorDetails=true 
