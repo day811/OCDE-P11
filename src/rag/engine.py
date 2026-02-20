@@ -36,8 +36,11 @@ class RAGEngine:
 
         query_vector = np.array([query_embedding], dtype=np.float32)
         
+        if hasattr(self.faiss_index, 'nprobe'):  # IndexIVFFlat
+            self.faiss_index.nprobe = 20  
+
         # Search Faiss
-        search_k = max(k * 70,500)
+        search_k = max(k * 70,1000)
         distances, indices = self.faiss_index.search(query_vector, search_k)
         
         # Build results with distances
