@@ -115,8 +115,8 @@ class SearchBot:
             
             # ✅ LOG TOKENS
             query_tokens = embed_tokens
-            context_tokens = len(context.split()) * 1.3
-            llm_tokens = len(answer.split()) * 1.3
+            context_tokens = int(len(context.split()) * 1.3)
+            llm_tokens = int(len(answer.split()) * 1.3)
             
            
             return {
