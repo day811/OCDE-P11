@@ -1,0 +1,73 @@
+{
+  "answer": "Le concert de **Disada et DJ VKO** (reggae, ragga, dancehall) a lieu **au Nautilus**, situé **20 rue Jules Verne, 66100 Perpignan** (Pyrénées-Orientales).\n\n**Infos pratiques** :\n- **Date/heure** : 21h00 à 2h00\n- **Tarif** : 5€ (2€ pour les adhérents)\n- **Ambiance** : Bar sur place, ambiance festive et dansante, hommage à l'héritage reggae.\n\n**Recommandation** :\nSi tu aimes les sons reggae locaux et une ambiance conviviale, c'est un bon plan. Pense à vérifier les horaires et les consignes éventuelles avant de te déplacer.\n\n*Bonus* : Si tu cherches une alternative plus intimiste, le concert commenté de **Nilco Moogin** (guitare/voix) au même lieu pourrait aussi t'intéresser.",
+  "sources": [
+    {
+      "url": "https://openagenda.com/le-nautilus-perpignan/events/concert-de-disada-et-dj-vko",
+      "title": "CONCERT DE DISADA et DJ VKO",
+      "description": "CONCERT DE DISADA et DJ VKO. CONCERT RAGGA, REGGAE, DANCEHALL, DISADA + VKO DJ , ENTREE 5€ et 2€ pour les ADHERENTS AU NAUTILUS 20 RUE JULES VERNE 66100 PERPIGNAN. CONCERT DE DISADA + DJ VKO CONCERT REGGAE, RAGGA, DANCEHALL 21H00 à 2H00 AU NAUTILUS 20 RUE JULES VERNE 66100 PERPIGNAN 5€ L'ENTREE ou 2€ POUR LES ADHERENTS BAR SUR PLACE VIENS ECOUTER, DANSER SUR LES SONS DIGNE DE BOB MARLEY UN HERITAGE REGGAE, DANCEHALL, RAGGA D'UN ARTISTE LOCAL DE PERPIGNAN. ",
+      "event_id": "21695845",
+      "dept": "Pyrénées-Orientales",
+      "city": "Perpignan",
+      "address": "20 rue jules verne 66000 Perpignan",
+      "distance": 0.30172857642173767,
+      "dates": "28/02/2026, 21:00:00 et 01/03/2026, 00:00:00"
+    },
+    {
+      "url": "https://openagenda.com/le-nautilus-perpignan/events/nathan-roche-harlan-t-bobo-elgun-stone",
+      "title": "ANNULE ! Nathan Roche + Harlan T. Bobo + Elgun Stone",
+      "description": "Guitare, voix, récit : un moment intimiste, sincère, fait pour écouter et voyager. https://youtu.be/ML88Aftz1zk?si=9ITMHNx8KDNrjPaW. 10 €. Perpignan. 20 rue jules verne 66000 Perpignan. Pyrénées-Orientales. ",
+      "event_id": "24673110",
+      "dept": "Pyrénées-Orientales",
+      "city": "Perpignan",
+      "address": "20 rue jules verne 66000 Perpignan",
+      "distance": 0.38355857133865356,
+      "dates": "11/03/2026, 19:00:00"
+    },
+    {
+      "url": "https://openagenda.com/pci-occitanie/events/fete-de-lours-6367377",
+      "title": "Fête de l'Ours de Saint Laurent de Cerdans",
+      "description": "Fête participative dont il est  vivement conseillé de prendre des informations en amont et de respecter les consignes de sécurité.. Saint-Laurent-de-Cerdans. Rue de la Sort, Saint-Laurent-de-Cerdans. Pyrénées-Orientales. ",
+      "event_id": "80335096",
+      "dept": "Pyrénées-Orientales",
+      "city": "Saint-Laurent-de-Cerdans",
+      "address": "Rue de la Sort, Saint-Laurent-de-Cerdans",
+      "distance": 0.40868696570396423,
+      "dates": "01/03/2026, 10:00:00"
+    },
+    {
+      "url": "https://openagenda.com/tac-troupuscule/events/vernissage-exposition-elikia-act3-de-sarah-paul-concert-commente-de-nilco-moogin",
+      "title": "Exposition peintures ELIKIA act.3 de Sarah PAUL",
+      "description": "19h30 Concert Commenté de @Nilco Moogin Dans une forme acoustique, sans fards ni artifices, face au public textes en main, l'artiste compositeur, guitariste, interprète nous invite à un temps d'échange, directement de l'artiste au \"consommacteur\". Un moment hors des frontières et hors du temps où l'éveil des consciences rend possible la liberté sous toutes ses formes... ",
+      "event_id": "28817893",
+      "dept": "Pyrénées-Orientales",
+      "city": "Perpignan",
+      "address": "31 rue des Romarins, 66000 Perpignan",
+      "distance": 0.41308099031448364,
+      "dates": "19/02/2026, 10:00:00 et 19/02/2026, 14:00:00 et 19/02/2026, 18:30:00"
+    }
+  ],
+  "constraints": {
+    "date": [
+      "2026-02-19 00:00:00",
+      30
+    ],
+    "city": null,
+    "dept": "Pyrénées-Orientales"
+  },
+  "query_tokens": 36,
+  "context_tokens": 458,
+  "llm_tokens": 127,
+  "success": true,
+  "mode": "chat",
+  "llm_chat_model": "ChatMistralAI:mistral-small",
+  "temperature": 0.7,
+  "top_k": 9,
+  "total_tokens": 621,
+  "timestamp": "20260221_01231771633419",
+  "mean_distance": 0.3767637759447098,
+  "execution_time": 2.01008,
+  "question": "Sais tu ou se trouve le concert de DISADA et DJ VKO dans les pyrénees orientales\n",
+  "snapshot_index": "/home/yves/Documents/DEV/OCDE/OCDE-P11/data/indexes/mistral_faiss_index_2026-02-19.bin",
+  "llm_embed_model": "Mistral AI:mistral-embed",
+  "role": "assistant"
+}
