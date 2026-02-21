@@ -19,64 +19,82 @@ class QueryParser:
         
         """Extract date from query"""
         months = ['janvier',"fevrier", "mars", "avril", "mai","juin", "juillet","aout", "septembre", "octobre", "novembre", "decembre"]
-        query_lower = normalize_str(query)
+        normalized_query = normalize_str(query)
         # En mode développement, repositionne aujourd'hui sur snapshot_date
         today = datetime.fromisoformat(today) if today and today == Config.DEV_SNAPSHOT_DATE else datetime.today()
         current_year = int(today.strftime("%Y"))
 
-        #On a precise date
-        match = re.search(r'\ble\s+(0?[1-9]|[12][0-9]|3[01])[\/\- ](0?[1-9]|1[0,1,2])[\/\-\s ](?:20|)([234][0-9]|)', query_lower +" ")
+        #On a precise date in %d %B (%y)
+        for index, month in enumerate(months):
+            match = re.search(fr'\ble\s+(0?[1-9]|[12][0-9]|3[01])[\/\- ]({month})[\/\-\s ](?:20|)([234][0-9]|)', normalized_query +" ")
+            if match and match.lastindex >= 2: # pyright: ignore[reportOptionalOperand]
+                dd = int(match[1])
+                mm = int(index+1)
+                aa = int("20" + match[3] if match[3] else datetime.now().strftime('%Y'))
+                precise_day = datetime(aa,mm,dd)
+                if precise_day < today : 
+                    return (datetime(aa+1,mm,dd),0)
+                else :
+                    return (precise_day,0)
+            
+        #On a precise date in number %d %m (%y)
+        match = re.search(r'\ble\s+(0?[1-9]|[12][0-9]|3[01])[\/\- ](0?[1-9]|1[0,1,2])[\/\-\s ](?:20|)([234][0-9]|)', normalized_query +" ")
         if match and match.lastindex >= 2: # pyright: ignore[reportOptionalOperand]
             dd = int(match[1])
             mm = int(match[2])
-            aa = int("20" + match[3] if match[3] else datetime.now().strftime('%y'))
-            return (datetime(aa,mm,dd),0)
+            aa = int("20" + match[3] if match[3] else datetime.now().strftime('%Y'))
+            precise_day = datetime(aa,mm,dd)
+            if precise_day < today : 
+                return (datetime(aa+1,mm,dd),0)
+            else :
+                return (precise_day,0)
 
         # Today/tonight
-        if re.search(r'\b(ce soir|aujourd\'hui|ce jour|ce matin|cet apres[\- ]midi)\b', query_lower):
+        if re.search(r'\b(ce soir|aujourd\'hui|ce jour|ce matin|cet apres[\- ]midi)\b', normalized_query):
             return (today,0)
         
         # Tomorrow
-        if re.search(r'\b(demain)\b', query_lower):
+        if re.search(r'\b(demain)\b', normalized_query):
             return (today+ timedelta(days=1), 0)
         
         # Relative days: "dans X jours"
-        match = re.search(r'\bdans\s+(\d+)\s+(jour|jours)\b', query_lower)
+        match = re.search(r'\bdans\s+(\d+)\s+(jour|jours)\b', normalized_query)
         if match:
             days = int(match.group(1))
             return (today + timedelta(days=days), 0)
         
-        # Next weekend
-        if re.search(r'\b(week[\- ]?end)\sprochain', query_lower):
-            days_until_saturday = (5 - today.weekday()) % 7 or 7
+        # Next weekend including friday
+        if re.search(r'\b(week[\- ]?end)\sprochain', normalized_query):
+            days_until_friday = (4 - today.weekday()) % 7 
             
-            return (today + timedelta(days=days_until_saturday+7) ,1)
+            return (today + timedelta(days=days_until_friday+7) ,2)
         
-        # This weekend
-        if re.search(r'\b(ce week[\- ]?end)\b', query_lower):
-            days_until_saturday = (5 - today.weekday()) % 7 or 7
+        # This weekend including friday
+        if re.search(r'\b(ce week[\- ]?end)\b', normalized_query):
+            days_until_friday = (4 - today.weekday()) % 7 
             
-            return (today + timedelta(days=days_until_saturday) ,1)
+            return (today + timedelta(days=days_until_friday) ,2)
         
         # Next week
-        if re.search(r'\b(semaine\sprochaine)\b', query_lower):
+        if re.search(r'\b(semaine\sprochaine)\b', normalized_query):
             days_until_monday = (- today.weekday()) % 7 or 7
                 
             return (today + timedelta(days=days_until_monday) ,6)
         
         # Current week
-        if re.search(r'\b(?:cette|la)\s(semaine)\b', query_lower):
+        if re.search(r'\b(?:cette|la)\s(semaine)\b', normalized_query):
             days_until_sunday = (6 - today.weekday()) % 7 
                 
             return (today  , days_until_sunday)
 
         # On precise month
         for index, month in enumerate(months):
-            if re.search(fr"\b(?:mois de\s|mois d'|en\s)({month})\b", query_lower):
+            if re.search(fr"\b(?:mois de\s|mois d'|en\s)({month})\b", normalized_query):
                 index_month = (index + 1) 
-                first_day = datetime(current_year, index_month,1)
-                first_day = max(first_day,today)
-                days_in_months = monthrange(first_day.year, first_day.month)[1]- first_day.day
+                index_year = today.year if index_month>= today.month else today.year+1
+                first_day = datetime(index_year, index_month,1)
+                first_day = max( first_day,today)
+                days_in_months = monthrange(first_day.year, first_day.month)[1] - first_day.day
                 return (first_day ,days_in_months)
                 
 
