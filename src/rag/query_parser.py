@@ -22,7 +22,8 @@ class QueryParser:
         normalized_query = normalize_str(query)
         # En mode développement, repositionne aujourd'hui sur snapshot_date
         today = datetime.fromisoformat(today) if today and today == Config.DEV_SNAPSHOT_DATE else datetime.today()
-        current_year = int(today.strftime("%Y"))
+        today = datetime(today.year,today.month,today.day)
+
 
         #On a precise date in %d %B (%y)
         for index, month in enumerate(months):
