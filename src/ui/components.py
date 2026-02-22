@@ -152,7 +152,7 @@ def render_stats(result: Dict):
 
             st.markdown('**Statistiques**')
             mean_distance = result.get('mean_distance', None)
-            avg_dst = int((1 - float(mean_distance)) * 100) if mean_distance else "---"
+            avg_relevance = int((1 - float(mean_distance)) * 100) if mean_distance else "---"
             query_tokens = result.get('query_tokens', 0)
             context_tokens = result.get('context_tokens', 0)
             llm_tokens = result.get('llm_tokens', 0)
@@ -163,7 +163,7 @@ def render_stats(result: Dict):
                 'context tokens': context_tokens,
                 'answer tokens': llm_tokens,
                 'execution_time': f"{exec_time:.3f}s",
-                'average distance' : f"{avg_dst}%",
+                'average relevance' : f"{avg_relevance}%",
                 'sources_count': sources_count,
                 'mode': result.get('mode', 'unknown'),
                 'timestamp': timestamp

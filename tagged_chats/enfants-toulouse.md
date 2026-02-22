@@ -36,8 +36,8 @@ Voici une sélection d'activités adaptées aux enfants à Toulouse :
 
 ## Annotations 
 
-- Bien que la contrainte de date soit correcte, le chat interprète le week-end prochain incorrectement
 - Les documents récupérés correspondent à la requête`
+- Le chat a présenté les informations regroupées par age !
 
 ## Événements utilisés comme contexte
 

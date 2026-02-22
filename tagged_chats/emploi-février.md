@@ -8,7 +8,7 @@
 - **Modèle d'embedding** : Mistral AI:mistral-embed
 - **Température** : 0.7
 - **Top_K** : 5
-- **Temps d’exécution** : 3.938021 s
+- **Temps d’exécution** : 2.638021 s
 - **Distance moyenne** : 0.34410442113876344
 - **Index** : `mistral_faiss_index_2026-02-19.bin`
 - **Fenêtre temporelle** : 2026-02-19 00:00:00 ± 9 jours
@@ -25,8 +25,8 @@ Voici les événements emploi en février 2026 en Occitanie qui pourraient vous 
 
 ## Annotations 
 
-- Bien que la contrainte de date soit correcte, le chat interprète le week-end prochain incorrectement
-- Les documents récupérés correspondent à la requête`
+- 4/5 documents récupérés correspondent à la requête
+- le llm a bien filtré ceux réellement correspondant "emploi" et correctement contextualisé les deux ne contenant pas ce terme
 
 ## Événements utilisés comme contexte
 

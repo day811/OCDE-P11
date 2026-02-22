@@ -29,8 +29,8 @@ Si tu aimes les sons reggae locaux et une ambiance conviviale, c'est un bon plan
 
 ## Annotations 
 
-- Bien que la contrainte de date soit correcte, le chat interprète le week-end prochain incorrectement
-- Les documents récupérés correspondent à la requête`
+- Un des documents récupérés correspondent bien à la requête`
+- Le filtre de département est efficace pour récupérer le bon document (dans le département, la bonne réponsé n'est pas trouvée)
 
 ## Événements utilisés comme contexte
 

@@ -8,7 +8,7 @@
 - **Modèle d'embedding** : Mistral AI:mistral-embed
 - **Température** : 0.7
 - **Top_K** : 5
-- **Temps d’exécution** : 2.755905 s
+- **Temps d’exécution** : 2.155905 s
 - **Distance moyenne** : 0.43767847418785094
 - **Index** : `mistral_faiss_index_2026-02-19.bin`
 - **Fenêtre temporelle** : 2026-02-28 00:00:00 ± 1 jours
@@ -30,7 +30,7 @@ Pour le week-end prochain (30 et 31 mars), voici une recommandation personnalis�
 ## Annotations 
 
 - Bien que la contrainte de date soit correcte, le chat interprète le week-end prochain incorrectement
-- Les documents récupérés correspondent à la requête`
+- Les documents récupérés correspondent à la requête mais ne sont pas présentés dans la réponse
 
 ## Événements utilisés comme contexte
 

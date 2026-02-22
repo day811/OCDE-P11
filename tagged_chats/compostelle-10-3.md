@@ -31,8 +31,9 @@ Si vous cherchez spécifiquement *"Compostelle"*, je vous conseille de vérifier
 
 ## Annotations 
 
-- Bien que la contrainte de date soit correcte, le chat interprète le week-end prochain incorrectement
-- Les documents récupérés correspondent à la requête`
+- L'événement demandé n'apparait pas dans la liste bien qu'existant. Le chat ne cherche que dans les documents fournis
+- Donner une précision sur le lieu (dept ou ville) permet de trouver l'événement
+- Si le retriever (bug dev) ne renvoie aucun document, le llm trouve les informations seul sur le web.
 
 ## Événements utilisés comme contexte
 
