@@ -21,19 +21,55 @@ logger = logging.getLogger(__name__)
 
 class EventVectorizer:
     """
-    Convertit les événements textes en vecteurs indexés dans Faiss.
+    EventVectorizer
+    A class for vectorizing event data using language models and creating searchable vector indices.
+    This class handles the complete vectorization pipeline including:
+    - Text chunking with intelligent splitting strategies
+    - Embedding generation via LLM API with batch processing
+    - FAISS index creation and persistence
+    - Metadata management and persistence
+    Attributes:
+        llm: Language model instance from the configured provider
+    Methods:
+        __init__(provider): Initialize vectorizer with specified LLM provider
+        split_text(input_text, chunk_size, level): Recursively split text into chunks using separators
+        chunk_events(events, chunk_size): Split event descriptions into manageable chunks
+        vectorize_chunks(chunks, batch_size): Generate embeddings for chunks via LLM API
+        create_faiss_index(embeddings, n_vectors): Create optimized FAISS vector index
+        save_index(index, snapshot_date): Persist FAISS index to disk
+        save_metadata(chunks, events, snapshot_date): Save chunk metadata with event context
+        load_processed_events(processed_path): Load events from JSON file
+        run_full_vectorization_pipeline(processed_path, snapshot_date, chunk_size): Execute complete pipeline
     """
     
     def __init__(self, provider = Config.LLM_PROVIDER):
-#        self.client = llm_api(api_key=api_key)
+
         self.llm = get_llm(provider=provider)
     
 
     def split_text(self, input_text, chunk_size: int = 500, level=0):
         """
-        Eclate le texte en fragments de taille <= chunksize
-        Divise sur ". " et " " en cas d'insuffisance
+        Recursively split text into chunks of specified size using hierarchical separators.
+        This method attempts to split text using different separators (period, comma, space)
+        in a hierarchical manner. It starts with the coarsest separator and progressively
+        uses finer separators if chunks exceed the specified size.
+        Args:
+            input_text (str): The text to be split into chunks.
+            chunk_size (int, optional): Maximum character length for each chunk. Defaults to 500.
+            level (int, optional): Current level of separator hierarchy (0=". ", 1=", ", 2=" "). 
+                                  Defaults to 0.
+        Returns:
+            list: A list of text chunks, each not exceeding chunk_size characters 
+                  (except when no separators are available).
+        Raises:
+            ValueError: If a chunk cannot be split further because all separators 
+                       have been exhausted while the text still exceeds chunk_size.
+        Note:
+            - Chunks retain their original separator at the end.
+            - Empty sentences are filtered out.
+            - The method recursively calls itself with incrementally finer separators.
         """
+        
         sep = (". ", ", ", " ")
         sentences = input_text.split(sep[level])
         output_text_list=[]
@@ -53,8 +89,27 @@ class EventVectorizer:
 
     def chunk_events(self, events: List[Dict], chunk_size: int = 500) -> List[Dict]:
         """
-        Découper les descriptions d'événements en chunks.
+        Split a list of events into text chunks of a specified maximum size.
+        This method processes events by combining their text fields, removing HTML tags,
+        and intelligently splitting the resulting text into chunks using sentence-based
+        segmentation. Each chunk is tracked with a unique ID and linked to its source event.
+        Args:
+            events (List[Dict]): A list of event dictionaries to be chunked. Each event
+                must contain a 'uid' field for identification and text fields defined in
+                Config.CHUNK_FIELDS.
+            chunk_size (int, optional): The maximum size (in characters) of each chunk.
+                Defaults to 500.
+        Returns:
+            List[Dict]: A list of chunk dictionaries, each containing:
+                - 'chunk_id' (int): Unique identifier for the chunk
+                - 'event_id': The source event's unique identifier
+                - 'text' (str): The chunk text content
+        Example:
+            >>> chunks = vectorizer.chunk_events([event1, event2], chunk_size=1000)
+            >>> len(chunks)
+            5
         """
+        
         chunks = []
         chunk_id = 0
         
@@ -96,16 +151,27 @@ class EventVectorizer:
     
     def vectorize_chunks(self, chunks: List[Dict], batch_size: int = 100) -> np.ndarray:
         """
-        Create embeddings for each chunk via Mistral API.
-        Processes chunks in batches to respect API limits and improve reliability.
-        
+        Vectorize a list of text chunks into embeddings using the LLM API in batches.
+        This method processes chunks in batches to efficiently generate embeddings while
+        tracking token usage and managing API calls with rate limiting.
         Args:
-            chunks: List of chunk dictionaries
-            batch_size: Number of chunks per API call (default: 100)
-            
+            chunks (List[Dict]): A list of dictionaries containing chunk data. Each dictionary
+                must have a 'text' key containing the text to be vectorized.
+            batch_size (int, optional): The number of chunks to process per API call. 
+                Defaults to 100.
         Returns:
-            Numpy array of embeddings (float32)
+            np.ndarray: A 2D numpy array of float32 embeddings with shape (total_chunks, embedding_dim).
+                Each row represents the embedding vector for the corresponding input chunk.
+        Raises:
+            Exception: Re-raises any exception that occurs during the vectorization process,
+                with details logged to the logger.
+        Side Effects:
+            - Logs vectorization progress and statistics at INFO and DEBUG levels.
+            - Tracks token usage per batch and logs aggregated statistics.
+            - Records token accounting information for the entire operation.
+            - Introduces a 2-second delay between batch API calls.
         """
+        
         texts = [chunk['text'] for chunk in chunks]
         total_chunks = len(texts)
         
@@ -181,8 +247,26 @@ class EventVectorizer:
 
     def create_faiss_index(self, embeddings: np.ndarray, n_vectors: int) -> faiss.IndexIVFFlat:
         """
-        Créer un index Faiss optimisé.
+        Create a FAISS index for efficient similarity search on embeddings.
+        This method initializes an IVFFlat (Inverted File Flat) index, optimized for
+        medium-sized datasets. The index is trained on the provided embeddings and
+        populated with all vectors for subsequent similarity searches.
+        Args:
+            embeddings (np.ndarray): 2D array of embedding vectors with shape
+                (n_vectors, embedding_dimension).
+            n_vectors (int): Total number of vectors in the embeddings array.
+        Returns:
+            faiss.IndexIVFFlat: A trained FAISS index ready for similarity search queries.
+        Raises:
+            ValueError: If embeddings array is empty or has invalid dimensions.
+            RuntimeError: If index training or population fails.
+        Notes:
+            - The number of inverted file lists (nlist) is automatically computed as
+              a fraction of n_vectors, bounded between 10 and 100.
+            - Uses L2 (Euclidean) distance as the distance metric.
+            - Index must be trained before adding vectors.
         """
+        
         dimension = embeddings.shape[1]  
         
         # IVF : optimisé pour medium-sized datasets
@@ -200,8 +284,16 @@ class EventVectorizer:
     
     def save_index(self, index: faiss.IndexIVFFlat, snapshot_date: str) -> str:
         """
-        Sauvegarder l'index Faiss.
+        Save a FAISS index to disk.
+        Args:
+            index (faiss.IndexIVFFlat): The FAISS index to save.
+            snapshot_date (str): The snapshot date used to determine the index file path.
+        Returns:
+            str: The file path where the index was saved.
+        Raises:
+            Exception: If the index cannot be written to disk or the path cannot be created.
         """
+        
         from src.config import Config
         
         index_path = Config.get_index_path(snapshot_date)
@@ -213,13 +305,25 @@ class EventVectorizer:
     
     def save_metadata(self, chunks: List[Dict], events: List[Dict], snapshot_date: str) -> str:
         """
-        Sauvegarder les métadonnées des chunks.
-        
+        Save metadata for vectorized chunks to a JSON file.
+        Creates a metadata file containing enriched information about chunks by combining
+        chunk data with corresponding event details. The metadata is organized by index
+        and includes event information such as title, location, dates, and URL.
         Args:
-            chunks: List of chunks with chunk_id, event_id, text
-            events: List of events to lookup metadata by uid
-            snapshot_date: Date for path generation
+            chunks: List of chunk dictionaries, each containing 'event_id', 'chunk_id', and 'text'.
+            events: List of event dictionaries containing event details indexed by 'uid'.
+            snapshot_date: The snapshot date used to determine the metadata file path.
+        Returns:
+            str: The full path to the saved metadata JSON file.
+        Raises:
+            FileNotFoundError: If the parent directory cannot be created.
+            IOError: If the metadata file cannot be written.
+        Note:
+            - Only chunks with matching events in the event_lookup are included in metadata.
+            - The metadata path is determined by Config.get_metadata_path() using the LLM provider name.
+            - Parent directories are created automatically if they don't exist.
         """
+        
         from src.config import Config
         
         metadata_path = Config.get_metadata_path(provider=self.llm.NAME, snapshot_date=snapshot_date)
@@ -253,25 +357,55 @@ class EventVectorizer:
         return metadata_path    
 
     def load_processed_events(self, processed_path: str) -> List[Dict]:
-            """
-            Load processed events from JSON file.
-            
-            Args:
-                processed_path: Path to processed events JSON
-                
-            Returns:
-                List of event dictionaries
-            """
-            logger.info(f"Loading processed events from {processed_path}...")
-            
-            with open(processed_path, 'r', encoding='utf-8') as f:
-                events = json.load(f)
-            
-            logger.info(f"Loaded {len(events)} events")
-            return events
-    
+        """
+        Load processed events from a JSON file.
+        Args:
+            processed_path (str): The file path to the JSON file containing processed events.
+        Returns:
+            List[Dict]: A list of dictionaries representing the loaded events.
+        Raises:
+            FileNotFoundError: If the file at processed_path does not exist.
+            json.JSONDecodeError: If the file content is not valid JSON.
+        Example:
+            >>> events = loader.load_processed_events('/path/to/events.json')
+            >>> len(events)
+            42
+        """
+        
+        logger.info(f"Loading processed events from {processed_path}...")
+        
+        with open(processed_path, 'r', encoding='utf-8') as f:
+            events = json.load(f)
+        
+        logger.info(f"Loaded {len(events)} events")
+        return events
+
     def run_full_vectorization_pipeline(self, processed_path: str, snapshot_date: str, chunk_size: int = 500) -> Tuple[str, str]:
-        """Execute complete vectorization pipeline: Load → Chunk → Vectorize → Index → Save"""
+        """
+        Execute the complete vectorization pipeline for processing events into a searchable Faiss index.
+        This method orchestrates the following steps:
+        1. Load processed events from disk
+        2. Chunk events into manageable batches
+        3. Generate vector embeddings for each chunk
+        4. Create and configure a Faiss index
+        5. Persist the index and associated metadata
+        Args:
+            processed_path (str): File path to the processed events data.
+            snapshot_date (str): Date identifier for versioning the index and metadata files.
+            chunk_size (int, optional): Number of events per chunk. Defaults to 500.
+        Returns:
+            Tuple[str, str]: A tuple containing:
+                - index_path (str): File path to the saved Faiss index
+                - metadata_path (str): File path to the saved metadata file
+        Raises:
+            Exception: Any exception raised during pipeline execution is logged and re-raised.
+                      The pipeline logs error details before raising.
+        Logs:
+            - Info messages at each pipeline stage with descriptive labels [3a] through [3f]
+            - Success/failure status with visual indicators (✅ or ❌)
+            - Index and metadata file paths upon successful completion
+        """
+        
         logger.info(f"\n{'='*70}")
         logger.info("VECTORIZATION PIPELINE - START")
         logger.info(f"{'='*70}")

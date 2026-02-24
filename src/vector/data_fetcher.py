@@ -19,7 +19,22 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAgendaFetcher:
-    """Fetch events from Open Agenda API"""
+    """
+    Fetcher for Open Agenda API events with pagination, retry logic, and validation.
+    This class handles fetching events from the Open Agenda API with support for:
+    - Geographic filtering by region
+    - Historical date range queries
+    - Automatic retry with exponential backoff
+    - Pagination with API offset limits
+    - Event validation against required fields
+    - JSON snapshot persistence
+    Attributes:
+        TIMEOUT (int): Request timeout in seconds (default: 10)
+        MAX_RETRIES (int): Maximum retry attempts for failed requests (default: 3)
+        region (str): Geographic region for filtering events
+        days_back (int): Number of days back to fetch events from
+        events (List[Dict[str, Any]]): Cached list of fetched events
+    """
     
     # API parameters
     TIMEOUT = 10  # seconds

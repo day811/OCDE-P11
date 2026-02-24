@@ -2,7 +2,7 @@
 ## Résumé de la requête
 
 - **Question** : Sais tu ou se trouve le concert de DISADA et DJ VKO dans les pyrénees orientales
-- **Datetime** : 2026/02/21 00:01:02:
+- **Datetime** : 2026/02/19 20:01:02:
 - **Mode** : chat
 - **Modèle de chat** : ChatMistralAI:mistral-small
 - **Modèle d'embedding** : Mistral AI:mistral-embed
@@ -29,8 +29,8 @@ Si tu aimes les sons reggae locaux et une ambiance conviviale, c'est un bon plan
 
 ## Annotations 
 
-- Un des documents récupérés correspondent bien à la requête`
-- Le filtre de département est efficace pour récupérer le bon document (dans le département, la bonne réponsé n'est pas trouvée)
+- Un des documents récupérés correspond bien à la requête`
+- Le filtre de département est efficace pour récupérer le bon document (sans le département, la bonne réponse n'est pas trouvée)
 
 ## Événements utilisés comme contexte
 

@@ -8,7 +8,7 @@
 - **Modèle d'embedding** : Mistral AI:mistral-embed
 - **Température** : 0.7
 - **Top_K** : 4
-- **Temps d’exécution** : 7.579976 s
+- **Temps d’exécution** : 2.279976 s
 - **Distance moyenne** : 0.37438950687646866
 - **Index** : `mistral_faiss_index_2026-02-19.bin`
 - **Date ciblée** : 2026-03-10 00:00:00
@@ -33,7 +33,7 @@ Si vous cherchez spécifiquement *"Compostelle"*, je vous conseille de vérifier
 
 - L'événement demandé n'apparait pas dans la liste bien qu'existant. Le chat ne cherche que dans les documents fournis
 - Donner une précision sur le lieu (dept ou ville) permet de trouver l'événement
-- Si le retriever (bug dev) ne renvoie aucun document, le llm trouve les informations seul sur le web.
+- Si le retriever (bug dev) ne renvoie aucun document, le llm trouve par lui-même les informations sur le web.
 
 ## Événements utilisés comme contexte
 

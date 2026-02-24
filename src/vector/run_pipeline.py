@@ -23,13 +23,24 @@ class PipelineOrchestrator:
     
     def __init__(self, region: str, days_back: int, max_pages: int, snapshot_date = None, provider:str = Config.LLM_PROVIDER):
         """
-        Initialize orchestrator.
-        
+        Initialize the pipeline runner with configuration parameters.
         Args:
-            region: Geographic region
-            days_back: Historical period (days)
-            snapshot_date: Force specific snapshot date (YYYY-MM-DD)
+            region (str): The geographic region for data processing.
+            days_back (int): Number of days to look back for data collection.
+            max_pages (int): Maximum number of pages to process.
+            snapshot_date (str, optional): The snapshot date in "YYYY-MM-DD" format. 
+                Defaults to None, which uses the current date.
+            provider (str, optional): The LLM provider to use. Defaults to Config.LLM_PROVIDER.
+        Attributes:
+            provider (str): The configured LLM provider.
+            region (str): The target region for processing.
+            max_pages (int): Maximum pages limit.
+            days_back (int): Number of days to look back.
+            snapshot_date (str): The snapshot date in "YYYY-MM-DD" format.
+            raw_snapshot_path (None): Path to raw snapshot data (initialized as None).
+            processed_path (str): Path to processed data (initialized as empty string).
         """
+        
         self.provider = provider
         self.region = region
         self.max_pages = max_pages
@@ -44,7 +55,12 @@ class PipelineOrchestrator:
         self.processed_path = ""
     
     def print_header(self) -> None:
-        """Print pipeline header"""
+        """
+        Print a formatted header for the RAG Data Pipeline execution.
+        Displays pipeline information including the snapshot date, region,
+        and historical data lookback period in a visually separated format.
+        """
+        
         print("\n" + "="*70)
         print("RAG DATA PIPELINE - FULL EXECUTION")
         print("="*70)
@@ -55,11 +71,18 @@ class PipelineOrchestrator:
     
     def step_1_fetch(self) -> bool:
         """
-        Step 1: Fetch events from Open Agenda.
-        
+        Fetch events snapshot from Open Agenda API.
+        Attempts to retrieve a snapshot of events from Open Agenda for the configured
+        region, going back the specified number of days, with pagination limits applied.
         Returns:
-            True if successful, False otherwise
+            bool: True if fetch operation completed successfully, False otherwise.
+        Side Effects:
+            - Prints progress messages and status updates to console.
+            - Updates self.raw_snapshot_path with the path to the fetched snapshot.
+        Raises:
+            Catches all exceptions internally and returns False on failure.
         """
+        
         try:
             print("\n[1/2] FETCHING from Open Agenda...")
             print("-" * 70)
@@ -80,11 +103,19 @@ class PipelineOrchestrator:
     
     def step_2_preprocess(self) -> bool:
         """
-        Step 2: Preprocess and clean events.
-        
+        Preprocess the raw snapshot data.
+        This method performs preprocessing on the snapshot data generated in step 1.
+        It validates that a snapshot path is available, then applies preprocessing
+        transformations with a configurable lookback window.
         Returns:
-            True if successful, False otherwise
+            bool: True if preprocessing completed successfully, False otherwise.
+        Raises:
+            ValueError: If the snapshot path has not been set (step 1 not completed).
+        Side Effects:
+            - Updates self.processed_path with the path to the preprocessed data.
+            - Prints status messages and progress indicators to stdout.
         """
+        
         try:
             print("\n[2/2] PREPROCESSING data...")
             print("-" * 70)
@@ -105,7 +136,21 @@ class PipelineOrchestrator:
             return False
     
     def step3_vectorize_and_index(self) -> bool:
-        """NOUVEAU : Vectoriser + Indexer dans Faiss"""
+        """
+        Vectorizes processed events and creates a Faiss index for similarity search.
+        This method orchestrates the full vectorization pipeline, converting processed
+        event data into vector embeddings and building a searchable Faiss index with
+        associated metadata.
+        Returns:
+            bool: True if vectorization and indexing completed successfully, False otherwise.
+        Raises:
+            Handles all exceptions internally and returns False on failure.
+        Note:
+            Prints status messages to console during execution.
+            Uses EventVectorizer with the provider specified in self.provider.
+            Chunk size is set to 500 for vectorization.
+        """
+        
         print("\n[STEP 3] Vectorizing and indexing with Faiss...")
         try:
             vectorizer = EventVectorizer(provider=self.provider)
@@ -122,7 +167,19 @@ class PipelineOrchestrator:
 
 
     def print_summary(self, success: bool) -> int:
-        """Print execution summary"""
+        """
+        Print a summary of the pipeline execution status.
+        Displays a formatted message indicating whether the pipeline completed
+        successfully or failed. On success, shows snapshot information including
+        the snapshot date, raw data path, and processed data path. Also indicates
+        whether this is a development snapshot (frozen for testing) or a live
+        snapshot (to be updated on next run).
+        Args:
+            success (bool): Whether the pipeline execution was successful.
+        Returns:
+            int: Exit code - 0 if successful, 1 if failed.
+        """
+        
         print("\n" + "="*70)
         
         if success:
@@ -148,11 +205,15 @@ class PipelineOrchestrator:
     
     def run(self) -> int:
         """
-        Execute complete pipeline.
-        
+        Execute the data processing pipeline sequentially.
+        Runs through three main steps: fetching data, preprocessing, and vectorization/indexing.
+        Each step must complete successfully for the pipeline to continue. If any step fails,
+        the pipeline halts and returns a failure summary.
         Returns:
-            0 if successful, 1 if failed
+            int: The result of print_summary(), indicating success (True) or failure (False)
+                 of the entire pipeline execution.
         """
+        
         self.print_header()
         Config.print_config()
         
@@ -173,7 +234,20 @@ class PipelineOrchestrator:
 
 
 def main():
-    """Parse arguments and run pipeline"""
+    """
+    Execute the RAG Data Pipeline with flexible configuration options.
+    This function serves as the entry point for the data pipeline, handling argument
+    parsing and orchestrating the execution of fetch, preprocess, and vectorization steps.
+    Supported operations:
+    - Full pipeline execution (steps 1-3): fetch, preprocess, and vectorize data
+    - Vectorization only (step 3): process existing snapshots without re-fetching
+    - Index listing: display available snapshots
+    Returns:
+        int: Exit code (0 for success, 1 for error)
+    Raises:
+        SystemExit: When argument parsing fails or list-indexes command is executed
+    """
+    
     parser = argparse.ArgumentParser(
         description="RAG Data Pipeline - Fetch, Preprocess, Vectorize",
         formatter_class=argparse.RawDescriptionHelpFormatter,

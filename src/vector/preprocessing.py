@@ -20,7 +20,25 @@ logger = logging.getLogger(__name__)
 
 
 class EventPreprocessor:
-    """Clean and preprocess event data from snapshots"""
+    """
+    EventPreprocessor
+    A data preprocessing pipeline for Open Agenda event data.
+    This class handles the complete workflow of loading raw event snapshots,
+    standardizing their structure, cleaning and validating the data, and exporting
+    processed events. It manages event date filtering, duplicate removal, missing
+    value handling, and text content validation.
+    Attributes:
+        snapshot_path (str): Path to the raw snapshot JSON file
+        cutoff_date (str): ISO format date string for filtering events by age
+        df (pd.DataFrame): DataFrame containing processed event records
+        metadata (dict): Metadata extracted from the snapshot file
+        stats (dict): Dictionary tracking statistics for each preprocessing step
+    Example:
+        >>> preprocessor = EventPreprocessor("/path/to/raw_snapshot_2024-01-15.json", days_back=365)
+        >>> preprocessor.run_full_pipeline()
+        >>> processed_df = preprocessor.get_dataframe()
+        >>> preprocessor.save_processed_data("/path/to/output.json")
+    """
     
     def __init__(self, snapshot_path: str, days_back: int = 365):
         """
@@ -28,6 +46,7 @@ class EventPreprocessor:
         
         Args:
             snapshot_path: Path to raw snapshot JSON
+            days_back: Amount of day before today to retrieve events data
         """
         self.snapshot_path = snapshot_path
         # Extract snapshot date from filename (raw_snapshot_YYYY-MM-DD.json)
@@ -125,7 +144,14 @@ class EventPreprocessor:
         logger.info(f"✅ Standardized to {len(self.df)} records")
     
     def drop_duplicates(self) -> None:
-        """Remove duplicate events by ID"""
+        """
+        Remove duplicate rows from the dataframe based on the 'uid' column.
+        Keeps the first occurrence of each duplicate and removes subsequent ones.
+        Logs the number of duplicates removed and updates the statistics dictionary.
+        Returns:
+            None
+        """
+        
         initial_count = len(self.df)
         
         self.df = self.df.drop_duplicates(subset=['uid'], keep='first')

@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-from typing import cast
+from typing import cast, Any
 from datetime import datetime
 
 
@@ -126,17 +126,56 @@ class Config:
     
     @classmethod
     def get_api_key(cls, provider:str=""):
+        def get_api_key(cls, provider: str = "") -> str:
+            """
+            Retrieve the API key for the specified provider.
+            Args:
+                provider (str, optional): The name of the API provider. If not provided,
+                    defaults to the configured LLM_PROVIDER. Defaults to "".
+            Returns:
+                str: The API key associated with the specified provider.
+            Raises:
+                KeyError: If the provider is not found in the API_KEYS dictionary.
+            """
+
         if not provider: provider= cls.LLM_PROVIDER
         return cls.API_KEYS[provider] 
         # Get models from config
 
     @classmethod
     def get_chat_model(cls, provider:str=""):
+        """
+        Get the chat model for the specified LLM provider.
+        Args:
+            provider (str, optional): The name of the LLM provider. If not provided,
+                defaults to the class's LLM_PROVIDER attribute.
+        Returns:
+            The chat model instance/configuration for the specified provider.
+        Raises:
+            KeyError: If the provider is not found in cls.LLM_MODELS.
+        """
+
         if not provider: provider= cls.LLM_PROVIDER
         return cls.LLM_MODELS[provider]['chat']
     
     @classmethod
     def get_embed_model(cls, provider:str=""):
+        def get_embed_model(cls, provider: str = "") -> Any:
+            """
+            Retrieve the embedding model for the specified provider.
+            Args:
+                provider (str, optional): The name of the LLM provider. 
+                    If not provided, defaults to the configured LLM_PROVIDER. 
+                    Defaults to "".
+            Returns:
+                Any: The embedding model associated with the specified provider.
+            Raises:
+                KeyError: If the provider is not found in LLM_MODELS.
+            Example:
+                >>> embed = get_embed_model("openai")
+                >>> embed = get_embed_model()  # Uses default provider
+            """
+
         if not provider: provider= cls.LLM_PROVIDER
         return cls.LLM_MODELS[provider]['embed']
     
@@ -144,10 +183,18 @@ class Config:
     @classmethod
     def set_environment(cls, env: Environment) -> None:
         """
-        Change execution environment.
-        
-        Args:
-            env: Target environment (DEVELOPMENT, DEMO, or PRODUCTION)
+        Set the execution environment for the application.
+        This class method updates the current environment configuration to the specified
+        target environment and outputs a confirmation message.
+            env (Environment): The target environment to set. Must be one of the
+                Environment enum values: DEVELOPMENT, DEMO, or PRODUCTION.
+        Returns:
+            None
+        Raises:
+            TypeError: If env is not a valid Environment enum member.
+        Example:
+            >>> Config.set_environment(Environment.PRODUCTION)
+            📌 Environment set to: PRODUCTION
         """
         cls.ENVIRONMENT = env
         print(f"📌 Environment set to: {env.value.upper()}")
@@ -155,7 +202,26 @@ class Config:
     
     @classmethod
     def print_available_indexes(cls) -> None:
-        """Display all available snapshots with their properties"""
+        """
+        Display a formatted list of available FAISS index snapshots.
+        Prints a table of all available index files in the indexes directory,
+        including their snapshot dates, file sizes, and status markers.
+        For each index, displays:
+        - Sequential index number
+        - Snapshot date (extracted from filename)
+        - File size in megabytes
+        - Status marker indicating if it's a development snapshot or the latest one
+        If no indexes are found, prints a message indicating the pipeline needs to be run.
+        Status markers:
+        - "🔒 DEVELOPMENT (FROZEN)": Indicates the development snapshot
+        - "⭐ LATEST": Indicates the most recent snapshot
+        Args:
+            cls: The class instance (used to access class attributes like INDEXES_DIR,
+                 LLM_PROVIDER, ALL_LLM, and DEV_SNAPSHOT_DATE)
+        Returns:
+            None
+        """
+        
         print("\n" + "="*70)
         print("📚 AVAILABLE SNAPSHOTS")
         print("="*70)
@@ -192,7 +258,25 @@ class Config:
     
     @classmethod
     def get_available_index_dates(cls):
-        """Get all available snapshots dates"""
+        """
+        Retrieve metadata for all available FAISS index files in the indexes directory.
+        This method scans the indexes directory for FAISS index binary files, extracts
+        their metadata (snapshot date, file size, and embedder), and marks special indexes
+        (latest and development).
+        Returns:
+            list: A list of dictionaries, each containing a snapshot date as key and a tuple
+                  of (markers, file_size_mb, embedder) as value. The markers string indicates
+                  special indexes:
+                  - "⭐ LATEST": The most recently added index file
+                  - "🔒 DEV": The development snapshot index
+                  - "": No special marker for regular indexes
+                  Returns an empty list if no index files are found.
+        Example:
+            >>> indexes = get_available_index_dates()
+            >>> # Returns: [{'2024-01-15': ('⭐ LATEST', 125.5, 'openai')}, 
+            >>>             {'2024-01-10': ('', 120.3, 'openai')}]
+        """
+        
         
         index_files = sorted(cls.INDEXES_DIR.glob("*_faiss_index_*.bin"))
         
@@ -226,7 +310,20 @@ class Config:
     
     @classmethod
     def get_raw_snapshot_path(cls, snapshot_date: str = "") -> str:
-        """Get path for raw snapshot JSON"""
+        """
+        Generate the file path for a raw data snapshot JSON file.
+        Args:
+            snapshot_date (str, optional): The date of the snapshot in "YYYY-MM-DD" format.
+                If not provided or empty string, defaults to the current date.
+                Defaults to "".
+        Returns:
+            str: The full file path to the raw snapshot JSON file, formatted as
+                "{RAW_DATA_DIR}/raw_snapshot_{snapshot_date}.json".
+        Example:
+            >>> path = get_raw_snapshot_path("2024-01-15")
+            >>> # Returns: ".../raw_snapshot_2024-01-15.json"
+        """
+        
         if snapshot_date == "":
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
@@ -234,7 +331,18 @@ class Config:
     
     @classmethod
     def get_processed_snapshot_path(cls, snapshot_date: str = "") -> str:
-        """Get path for processed snapshot JSON"""
+        """
+        Generate the file path for the processed snapshot data.
+        Args:
+            snapshot_date (str, optional): The snapshot date in 'YYYY-MM-DD' format. 
+                If empty string, defaults to today's date. Defaults to "".
+        Returns:
+            str: The full file path to the processed events JSON file.
+        Example:
+            >>> path = get_processed_snapshot_path("2023-12-25")
+            >>> # Returns: '/path/to/processed_data/processed_events_2023-12-25.json'
+        """
+        
         if snapshot_date == "":
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
@@ -242,7 +350,17 @@ class Config:
     
     @classmethod
     def get_index_path(cls, provider:str, snapshot_date: str = "") -> str:
-        """Get path for Faiss index"""
+        """
+            Get the file path for a FAISS index file.
+            Args:
+                provider (str): The name of the data provider.
+                snapshot_date (str, optional): The snapshot date in 'YYYY-MM-DD' format. 
+                                              Defaults to the current date if not provided.
+            Returns:
+                str: The full file path to the FAISS index file with the format:
+                     '{INDEXES_DIR}/{provider}_faiss_index_{snapshot_date}.bin'
+            """
+        
         if snapshot_date == "":
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
@@ -250,7 +368,17 @@ class Config:
     
     @classmethod
     def get_metadata_path(cls, provider:str, snapshot_date: str = "") -> str:
-        """Get path for metadata JSON"""
+        """
+        Generate the file path for metadata JSON file based on provider and snapshot date.
+        Args:
+            provider (str): The name of the data provider.
+            snapshot_date (str, optional): The snapshot date in "YYYY-MM-DD" format. 
+                Defaults to current date if not provided.
+        Returns:
+            str: The full file path to the metadata JSON file in the format:
+                "{INDEXES_DIR}/{provider}_metadata_{snapshot_date}.json"
+        """
+        
         if snapshot_date == "":
             snapshot_date = datetime.now().strftime("%Y-%m-%d")
         
@@ -258,7 +386,18 @@ class Config:
     
     @classmethod
     def print_config(cls) -> None:
-        """Print current configuration"""
+        """
+        Display the current configuration settings to the console.
+        Prints a formatted table showing:
+        - Environment mode (upper case)
+        - Region setting
+        - Historical data period in days
+        - Development snapshot date
+        - Data directory path
+        - Indexes directory path
+        Output is formatted with decorative headers and padding for readability.
+        """
+        
         print("\n" + "="*70)
         print("⚙️  CONFIGURATION")
         print("="*70)

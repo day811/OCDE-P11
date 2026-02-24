@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class TokenAccounting:
-    def __init__(self, logdir: Path = Path("data/tokenlogs"), session_id: Optional[str] = None):
+    def __init__(self, logdir: Path = Path("data/token_logs"), session_id: Optional[str] = None):
         self.logdir = Path(logdir)
         self.logdir.mkdir(parents=True, exist_ok=True)
         self.session_id = session_id or datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -93,7 +93,7 @@ accounting: Optional[TokenAccounting] = None
 def get_accounting(session_id: Optional[str] = None, logdir: Optional[Path] = None) -> TokenAccounting:
     global accounting
     if accounting is None:
-        accounting = TokenAccounting(logdir=logdir or Path("data/tokenlogs"), session_id=session_id)
+        accounting = TokenAccounting(logdir=logdir or Path("data/token_logs"), session_id=session_id)
     elif session_id and session_id != accounting.session_id:
         accounting = TokenAccounting(logdir=accounting.logdir, session_id=session_id)
     return accounting

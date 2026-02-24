@@ -67,24 +67,52 @@ class SearchBot:
         
     
     def answer_question(self,
+
         question: str,
         top_k: int = 5,
         temperature: float = 0.7
     ) -> Dict:
-        """Answer a question using RAG"""
+        """
+        Answer a user question by retrieving relevant chunks from a RAG engine and generating a response using an LLM.
+        This method orchestrates the following pipeline:
+        1. Parse constraints (date, city, department) from the question
+        2. Retrieve relevant chunks from the vector database using FAISS
+        3. Build context from the retrieved chunks
+        4. Generate an answer using the LLM based on the context
+        5. Format and return the response with sources and metadata
+        Args:
+            question (str): The user's question to answer.
+            top_k (int, optional): Maximum number of chunks to retrieve and include in sources. Defaults to 5.
+            temperature (float, optional): Temperature parameter for LLM generation controlling randomness. Defaults to 0.7.
+        Returns:
+            Dict: A dictionary containing:
+                - answer (str): The generated answer from the LLM
+                - sources (list): List of source chunks with metadata (event_id, title, city, dept, address, dates, url, distance, top_k)
+                - constraints (dict): Parsed constraints from the question
+                - mode (str): Mode of operation ('search')
+                - query_tokens (int): Number of tokens used for the query embedding
+                - context_tokens (int): Estimated number of tokens in the context
+                - llm_tokens (int): Estimated number of tokens in the LLM response
+                - faiss_time (float): Time taken for FAISS retrieval in seconds
+        Raises:
+            Exception: If an error occurs during question answering, the exception is logged and re-raised.
+        """        
         try:
             # Step 1: Parse constraints
             constraints = self.query_parser.parse_constraints(question, snapshot_date = self.snapshot_date)
            
             # Step 2: Retrieve chunks
-            chunks, embed_tokens = self.rag_engine.retrieve(
+            result = self.rag_engine.retrieve(
                 query_text=question,
                 k=top_k,
                 date_constraint=constraints['date'],
                 city_constraint=constraints['city'],
                 dept_constraint=constraints['dept'],
             )
-            chunks = chunks[:top_k]
+
+            chunks = result['chunks'][:top_k]
+            embed_tokens = result['embed_tokens']
+            faiss_time = result['faiss_time']
             
             # Step 3: Build context
             context = self.rag_engine.build_context(chunks, constraints)
@@ -127,6 +155,7 @@ class SearchBot:
                 'query_tokens' : query_tokens,
                 'context_tokens' : context_tokens,
                 'llm_tokens' : llm_tokens,
+                'faiss_time' : faiss_time,
             }
         
         except Exception as e:

@@ -40,7 +40,6 @@ Voici une sélection d'activités autour de la lecture et de l'écriture en avri
 
 ## Annotations 
 
-- Bien que la contrainte de date soit correcte, le chat interprète le week-end prochain incorrectement
 - Les documents récupérés correspondent à la requête`
 
 ## Événements utilisés comme contexte

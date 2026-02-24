@@ -34,6 +34,7 @@ class FaissRetrieverAdapter(BaseRetriever):
         object.__setattr__(self, '_top_k', top_k)
         object.__setattr__(self, '_snapshot_date', snapshot_date)
         object.__setattr__(self, '_embed_tokens', 0)
+        object.__setattr__(self, '_faiss_time', 0)
 
     @property
     def rag_retriever(self):
@@ -55,6 +56,10 @@ class FaissRetrieverAdapter(BaseRetriever):
     def embed_tokens(self):
         return getattr(self, '_embed_tokens', None)
    
+    @property
+    def faiss_time(self):
+        return getattr(self, '_faiss_time', None)
+   
 
     def _get_relevant_documents(self, query: str) -> List[Document]: # type: ignore
         """Get relevant documents from Faiss through RAGRetriever"""
@@ -62,13 +67,18 @@ class FaissRetrieverAdapter(BaseRetriever):
         constraints = self.query_parser.parse_constraints(query, self.snapshot_date) # type: ignore
         
         # Retrieve chunks using your existing RAGRetriever
-        chunks, embed_tokens = self.rag_retriever.retrieve( # type: ignore
+        result = self.rag_retriever.retrieve( # type: ignore
             query_text=query,
             date_constraint=constraints['date'],
             city_constraint=constraints['city'],
             dept_constraint=constraints['dept']
         )
+        chunks = result['chunks']
+        embed_tokens = result['embed_tokens']
+        faiss_time = result['faiss_time']
+
         object.__setattr__(self, '_embed_tokens', embed_tokens)
+        object.__setattr__(self, '_faiss_time', faiss_time)
 
 #        self.embed_tokens = embed_tokens
         # Convert chunks to LangChain Documents
@@ -88,6 +98,7 @@ class FaissRetrieverAdapter(BaseRetriever):
                     'city': chunk.get('city'),
                     'address': chunk.get('address'),
                     'distance': chunk.get('distance'),
+                    'faiss_time' : faiss_time,
                     'dates': dates
                 }
             ))
@@ -183,6 +194,8 @@ Sois concis et pertinent.
 
             # Estimate tokens (query embedding + context + generation)
             query_tokens = self.retriever.embed_tokens  # rough estimate
+            faiss_time = self.retriever.faiss_time  # rough estimate
+            
             context_string = " ".join([str(source) for source in sources]) + self.prompt.template
             context_tokens = int(len(context_string.split()) * 1.3)
             llm_tokens = int(len(result['result'].split(' ')) * 1.3)
@@ -194,7 +207,8 @@ Sois concis et pertinent.
                 'query_tokens' : query_tokens,
                 'context_tokens' : context_tokens,
                 'llm_tokens' : llm_tokens,
-                 'success': True
+                'faiss_time' : faiss_time,
+                'success': True
             }
         except Exception as e:
             logger.error(f"LangChain RAG error: {e}")

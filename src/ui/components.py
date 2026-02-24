@@ -157,12 +157,14 @@ def render_stats(result: Dict):
             context_tokens = result.get('context_tokens', 0)
             llm_tokens = result.get('llm_tokens', 0)
             timestamp = result.get('timestamp', datetime.now().strftime('%Y%m%d_%H%M%s'))
+            faiss_time = result.get('faiss_time', 0)
             st.json({
                 'total_tokens': total_tokens,
                 'query tokens': query_tokens,
                 'context tokens': context_tokens,
                 'answer tokens': llm_tokens,
                 'execution_time': f"{exec_time:.3f}s",
+                'faiss search_time': f"{faiss_time:.3f}ms",
                 'average relevance' : f"{avg_relevance}%",
                 'sources_count': sources_count,
                 'mode': result.get('mode', 'unknown'),
