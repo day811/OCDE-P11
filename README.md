@@ -167,7 +167,7 @@ streamlit-extras>=0.4.0
 
 ### 4. Configuration des API Keys
 
-Créer un fichier `.env` à la racine du projet[file:6] :
+Créer un fichier `.env` à la racine du projet :
 
 ```bash
 # Choisir au moins un provider
@@ -250,7 +250,7 @@ OCDE-P11/
 
 ### Pipeline de données (une seule fois)
 
-**Étape 1** : Collecter les événements Open Agenda[file:6]
+**Étape 1** : Collecter les événements Open Agenda
 
 ```bash
 python src/vector/run_pipeline.py
@@ -276,7 +276,7 @@ python src/vector/run_pipeline.py --vectorize-only --snapshot-date 2026-01-25
 python src/vector/run_pipeline.py --list-indexes
 ```
 
-**Durée estimée** : 10-30 minutes selon le nombre d'événements (≈2000-5000 événements)[file:6]
+**Durée estimée** : 10-30 minutes selon le nombre d'événements (≈2000-5000 événements)
 
 ---
 
@@ -291,7 +291,7 @@ Ou via le script shell :
 bash app.sh
 ```
 
-L'application s'ouvre sur **http://localhost:8501**[file:6]
+L'application s'ouvre sur **http://localhost:8501**
 
 ---
 
@@ -324,7 +324,7 @@ L'application s'ouvre sur **http://localhost:8501**[file:6]
 
 ## 🔧 Pipeline de données
 
-### Architecture du pipeline[file:6]
+### Architecture du pipeline
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -342,7 +342,7 @@ L'application s'ouvre sur **http://localhost:8501**[file:6]
   raw JSON          processed JSON    Faiss Index + Metadata
 ```
 
-### Détail des étapes[file:6]
+### Détail des étapes
 
 #### **STEP 1 : Data Fetching** (`data_fetcher.py`)
 
@@ -358,7 +358,7 @@ class OpenAgendaFetcher:
 **Paramètres API** :
 - `location_region='Occitanie'`
 - `lastdate_begin >= (today - 365 days)`
-- Champs sélectionnés : `title`, `description`, `longdescription_fr`, `location_city`, `timings`, etc.[file:6]
+- Champs sélectionnés : `title`, `description`, `longdescription_fr`, `location_city`, `timings`, etc.
 
 **Sortie** :
 ```json
@@ -386,7 +386,7 @@ class EventPreprocessor:
         sort_and_reset_index()     # Tri par UID
 ```
 
-**Validations appliquées**[file:6] :
+**Validations appliquées** :
 - ✅ Champs requis : `uid`, `title`, `timings`, `location_city`
 - ✅ Filtrage temporel : événements < 365 jours
 - ✅ Nettoyage HTML : suppression balises
@@ -423,12 +423,12 @@ class EventVectorizer:
         save_metadata(chunks, events, snapshot_date)
 ```
 
-**Chunking intelligent**[file:6] :
+**Chunking intelligent** :
 - Taille max : 500 caractères
 - Séparation progressive : `. ` → `, ` → ` `
 - Préservation du contexte événement
 
-**Embedding**[file:6] :
+**Embedding** :
 - Batch size : 100 chunks/appel API
 - Dimension : 1024 (Mistral) ou 1536 (OpenAI) ou 768 (Gemini)
 - Retry avec backoff si échec
@@ -451,7 +451,7 @@ index.add(embeddings)
 
 ### Gestion des snapshots
 
-Le système supporte **plusieurs snapshots** avec dates différentes[file:6] :
+Le système supporte **plusieurs snapshots** avec dates différentes :
 
 ```python
 # config.py
@@ -463,7 +463,7 @@ DEV_SNAPSHOT_DATE = "2026-01-25"  # Snapshot figé pour développement
 python src/vector/run_pipeline.py --list-indexes
 ```
 
-**Changement de snapshot** : Sélection dans le sidebar Streamlit[file:6]
+**Changement de snapshot** : Sélection dans le sidebar Streamlit
 
 ---
 
@@ -505,7 +505,7 @@ python src/vector/run_pipeline.py --list-indexes
 
 ## 🧪 Tests
 
-### Tests unitaires[file:6]
+### Tests unitaires
 
 ```bash
 # Tester l'environnement
@@ -581,7 +581,7 @@ class Config:
 
 ## 📊 Exemples de requêtes
 
-### Extraction automatique de contraintes[file:6]
+### Extraction automatique de contraintes
 
 Le système extrait automatiquement les **contraintes temporelles** et **géographiques** :
 
@@ -596,7 +596,7 @@ Lorsque l'on utilise une date de snapshot référencé 🔒 DEV dans le sélecte
 la date du snapshot est considéré comme "aujourd'hui" et sert de référence au calcul de constraintes
 permettant la repdocutibilité des questions/réponses.
 
-### Parsing date intelligent[file:6]
+### Parsing date intelligent
 
 ```python
 # src/rag/query_parser.py
