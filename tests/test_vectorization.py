@@ -47,6 +47,8 @@ class TestChunking(unittest.TestCase):
                 Config.LONG_DESC: 'Festival annuel présentant les meilleures bandes de rock du monde.',
                 Config.LOC_NAME: 'Parc de la Ville',
                 Config.LOC_CITY: 'Toulouse',
+                Config.LOC_DEPT : 'Haute-Garonne',
+                Config.LOC_ADDRESS : 'rue de Rome',
                 Config.CONDITIONS: 'Accès gratuit pour les enfants de moins de 12 ans.',
                 Config.URL: 'https://open-agenda.com/evt_001',
                 Config.TIMINGS: [{'begin': (datetime.now() + timedelta(days=5)).isoformat(), 'end': ''}]
@@ -55,10 +57,12 @@ class TestChunking(unittest.TestCase):
                 Config.UID: 'evt_002',
                 Config.TITLE: 'Concert de Jazz Intimiste',
                 Config.DESC: 'Une soirée jazz intime dans une atmosphère cosy.',
+                Config.LOC_DEPT : 'Hérault',
                 Config.LONG_DESC: """
                 <p>Pour cette seconde projection à l'Institut suédois, <a href="https://paris.si.se/agenda/cinema-carte-blanche-2-a-niki-lindroth-von-bahr/">Niki Lindroth von Bahr présente deux films d’animation</a> en stop-motion réalisés par le duo Marc James Roels et Emma De Swaef : le court métrage <em>Oh Willy_… suivi du moyen métrage Ce _Magnifique Gâteau !</em><br />Les deux artistes ont reçu 80 prix pour <em>Oh Willy…</em>, dont le Cartoon d’Or du meilleur court métrage européen d’animation. Ils ont également été nommé aux César en 2013. <em>Ce Magnifique Gâteau !</em> est leur nouvelle réalisation.</p> <p></p> <h3><strong>Synopsis</strong></h3> <p></p> <ul> <li><strong><em>Oh Willy ...</em></strong> : Face au décès de sa mère Willy se retrouve face à lui-même et à ses choix. Confus et mélancolique, il décide de s’enfuir dans la forêt. Après des débuts difficiles, il trouve protection auprès d’une grosse bête douce et poilue. (<em>Drame, France, Belgique, Pays-Bas, 2012, VOSTFR, 17 min, tous publics).</em></li> </ul> <p></p> <ul> <li><strong><em>Ce Magnifique Gâteau !</em></strong> : Anthologie de la colonisation africaine à la fin du 19e siècle, le film entremêle cinq récits qui croisent où se croisent un roi perturbé, un pygmée travaillant dans un hôtel de luxe, un homme d’affaires ruiné, un porteur égaré et un jeune déserteur. (<em>Drame, France, Belgique, Pays-Bas, 2018, VOSTFR, 44 min, tous publics).</em></li> </ul> <p></p> <h3><strong>Les réalisateurs</strong></h3> <p></p> <p><strong>Emma De Swaef</strong> est spécialisée dans le cinéma d’animation en stop-motion et dans la conception de poupées textiles. Elle signe l’un des trois chapitres du film "The House" (La Maison), produit par Netflix et dont Niki Lindroth von Bahr a réalisé un autre chapitre.</p> <p></p> <p><strong>Marc James Roels</strong> est issu du cinéma de fiction « live » et a été récompensé pour ses courts métrages "Mompelaar" (2007) et "A Gentle Creature" (2010).</p>",conditions_fr:"Entrée libre dans la limite des places disponibles.
                 """,
                 Config.LOC_NAME: 'Salle de Concert',
+                Config.LOC_ADDRESS : 'place de la Comédie',
                 Config.LOC_CITY: 'Montpellier',
                 Config.CONDITIONS: 'Réservation recommandée.',
                 Config.URL: 'https://open-agenda.com/evt_002',
@@ -312,7 +316,7 @@ class TestMetadataSaving(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up test data"""
-        cls.vectorizer = EventVectorizer()
+        cls.vectorizer = EventVectorizer(Config.LLM_PROVIDER)
         
         # Create sample events
         cls.sample_events = [
@@ -320,9 +324,12 @@ class TestMetadataSaving(unittest.TestCase):
                 Config.UID: 'evt_001',
                 Config.TITLE: 'Rock Festival',
                 Config.DESC: 'A rock festival',
+                Config.FIRST_DATE: '2026-02-18',
                 Config.LONG_DESC: 'Long description',
                 Config.LOC_NAME: 'Park',
                 Config.LOC_CITY: 'Toulouse',
+                Config.LOC_DEPT: 'Toulouse',
+                Config.LOC_ADDRESS: 'place du Capitole',
                 Config.CONDITIONS: 'Free entry',
                 Config.URL: 'https://example.com/evt_001',
                 Config.TIMINGS: [{'begin': datetime.now().isoformat(), 'end': ''}]
@@ -332,14 +339,19 @@ class TestMetadataSaving(unittest.TestCase):
         # Create chunks
         cls.chunks = cls.vectorizer.chunk_events(cls.sample_events, chunk_size=500)
     
+    def _mock_config_path(self, path: Path, method_name: str):
+        """Mock Config path method to always return given path."""
+        original_method = getattr(Config, method_name)
+        setattr(Config, method_name, lambda *args, **kwargs: str(path))
+        return original_method
+    
     def test_save_metadata_creates_file(self):
         """Verify metadata file is created"""
         with tempfile.TemporaryDirectory() as tmpdir:
             metadata_path = Path(tmpdir) / "metadata.json"
             
             # Mock the Config method
-            original_method = Config.get_metadata_path
-            Config.get_metadata_path = lambda x: str(metadata_path) # type: ignore
+            original_method = self._mock_config_path(metadata_path, 'get_metadata_path')
             
             try:
                 self.vectorizer.save_metadata(
@@ -360,8 +372,7 @@ class TestMetadataSaving(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             metadata_path = Path(tmpdir) / "metadata.json"
             
-            original_method = Config.get_metadata_path
-            Config.get_metadata_path = lambda x: str(metadata_path)# type: ignore
+            original_method = self._mock_config_path(metadata_path, 'get_metadata_path')
             
             try:
                 self.vectorizer.save_metadata(
@@ -392,8 +403,7 @@ class TestMetadataSaving(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             metadata_path = Path(tmpdir) / "metadata.json"
             
-            original_method = Config.get_metadata_path
-            Config.get_metadata_path = lambda x: str(metadata_path)# type: ignore
+            original_method = self._mock_config_path(metadata_path, 'get_metadata_path')
             
             try:
                 self.vectorizer.save_metadata(
