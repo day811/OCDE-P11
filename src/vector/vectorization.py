@@ -296,7 +296,7 @@ class EventVectorizer:
         
         from src.config import Config
         
-        index_path = Config.get_index_path(snapshot_date)
+        index_path = Config.get_index_path(provider = Config.LLM_PROVIDER, snapshot_date= snapshot_date)
         Path(index_path).parent.mkdir(parents=True, exist_ok=True)
         
         faiss.write_index(index, index_path)
@@ -326,7 +326,7 @@ class EventVectorizer:
         
         from src.config import Config
         
-        metadata_path = Config.get_metadata_path(provider=self.llm.NAME, snapshot_date=snapshot_date)
+        metadata_path = Config.get_metadata_path(provider= Config.LLM_PROVIDER, snapshot_date=snapshot_date)
         Path(metadata_path).parent.mkdir(parents=True, exist_ok=True)
         
         # Build event lookup by uid
