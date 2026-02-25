@@ -1,4 +1,4 @@
-# main.py - Streamlit Entry Point
+0# main.py - Streamlit Entry Point
 
 import streamlit as st
 import logging
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration Streamlit
 st.set_page_config(
-    page_title="🎭 Puls-Events - Événements Culturels - RAG",
+    page_title="Puls-Events - Événements Culturels - RAG",
     page_icon="🎭",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -68,7 +68,7 @@ logger.info(f"Session ID: {st.session_state.session_id}")
 # ============================================================================
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("# Puls Events")
+st.sidebar.markdown("# 🎭 Puls Events")
 st.sidebar.title("📋 Menu")
 st.sidebar.markdown("---")
 
