@@ -682,16 +682,3 @@ streamlit hello  # Test Streamlit
 ```
 
 ***
-
-Ce README couvre tous les aspects requis dans les livrables : [ppl-ai-file-upload.s3.amazonaws](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_cae1b248-9511-4e7b-9c4e-85caeb63e5af/074e7c59-fe78-4716-bcd9-f9f2c859ff2c/Mission-livrables.pdf)
-- ✅ Présentation et objectifs clairs
-- ✅ Instructions de reproduction complètes
-- ✅ Description détaillée de la structure
-- ✅ Documentation des scripts (preprocessing, vectorisation)
-- ✅ Architecture technique justifiée
-- ✅ Guide d'utilisation pas-à-pas
-- ✅ Configuration des dépendances
-- ✅ Tests unitaires mentionnés
-- ✅ Dépannage et ressources
-
-Le fichier est prêt à être placé à la racine du projet sous `README.md`. [ppl-ai-file-upload.s3.amazonaws](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/collection_cae1b248-9511-4e7b-9c4e-85caeb63e5af/6457e3a0-5c07-4df3-bf0f-940808134ebc/OCDE-P11.txt)
